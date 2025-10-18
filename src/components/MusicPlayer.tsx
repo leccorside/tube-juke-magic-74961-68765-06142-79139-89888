@@ -52,10 +52,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
 
   // Track the current youtube_id to avoid unnecessary reinitialization
   const currentYoutubeIdRef = useRef<string | null>(null);
+  const isInitializingRef = useRef(false);
 
   // Initialize player when ready and song changes
   useEffect(() => {
-    if (!isReady || !currentSong || !playerContainerRef.current) return;
+    if (!isReady || !currentSong || !playerContainerRef.current) {
+      return;
+    }
 
     // If it's the same video, don't reinitialize
     if (currentYoutubeIdRef.current === currentSong.youtube_id && playerRef.current) {
@@ -63,11 +66,20 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
       return;
     }
 
+    // Prevent multiple simultaneous initializations
+    if (isInitializingRef.current) {
+      console.log('Already initializing, skipping');
+      return;
+    }
+
     console.log('Initializing YouTube player for:', currentSong.title);
     console.log('YouTube ID:', currentSong.youtube_id);
 
+    isInitializingRef.current = true;
+
     // Update the current youtube_id
-    currentYoutubeIdRef.current = currentSong.youtube_id;
+    const newYoutubeId = currentSong.youtube_id;
+    currentYoutubeIdRef.current = newYoutubeId;
 
     // Destroy existing player
     if (playerRef.current) {
@@ -76,13 +88,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
       } catch (e) {
         console.error('Error destroying player:', e);
       }
+      playerRef.current = null;
     }
 
     // Create new player
     playerRef.current = new window.YT.Player(playerContainerRef.current, {
       height: '0',
       width: '0',
-      videoId: currentSong.youtube_id,
+      videoId: newYoutubeId,
       playerVars: {
         autoplay: 1,
         controls: 0,
@@ -94,6 +107,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
       events: {
         onReady: (event: any) => {
           console.log('YouTube player ready');
+          isInitializingRef.current = false;
           event.target.setVolume(volume);
           event.target.playVideo();
           setDuration(event.target.getDuration());
@@ -115,21 +129,18 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
         onError: (event: any) => {
           console.error('YouTube player error:', event.data);
           setIsPlaying(false);
+          isInitializingRef.current = false;
         },
       },
     });
+  }, [isReady, currentSong?.youtube_id]);
 
-    return () => {
-      if (playerRef.current) {
-        try {
-          playerRef.current.destroy();
-        } catch (e) {
-          console.error('Error destroying player:', e);
-        }
-      }
-      currentYoutubeIdRef.current = null;
-    };
-  }, [isReady, currentSong?.youtube_id, volume, onNext]);
+  // Update volume when it changes
+  useEffect(() => {
+    if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+      playerRef.current.setVolume(volume);
+    }
+  }, [volume]);
 
   // Update current time
   useEffect(() => {
@@ -143,6 +154,21 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
 
     return () => clearInterval(interval);
   }, [isPlaying]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (e) {
+          console.error('Error destroying player:', e);
+        }
+      }
+      currentYoutubeIdRef.current = null;
+      isInitializingRef.current = false;
+    };
+  }, []);
 
   const togglePlay = () => {
     if (!playerRef.current) return;
