@@ -50,16 +50,32 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
     }
   }, []);
 
+  // Track the current youtube_id to avoid unnecessary reinitialization
+  const currentYoutubeIdRef = useRef<string | null>(null);
+
   // Initialize player when ready and song changes
   useEffect(() => {
     if (!isReady || !currentSong || !playerContainerRef.current) return;
 
+    // If it's the same video, don't reinitialize
+    if (currentYoutubeIdRef.current === currentSong.youtube_id && playerRef.current) {
+      console.log('Same video, not reinitializing player');
+      return;
+    }
+
     console.log('Initializing YouTube player for:', currentSong.title);
     console.log('YouTube ID:', currentSong.youtube_id);
 
+    // Update the current youtube_id
+    currentYoutubeIdRef.current = currentSong.youtube_id;
+
     // Destroy existing player
     if (playerRef.current) {
-      playerRef.current.destroy();
+      try {
+        playerRef.current.destroy();
+      } catch (e) {
+        console.error('Error destroying player:', e);
+      }
     }
 
     // Create new player
@@ -111,8 +127,9 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
           console.error('Error destroying player:', e);
         }
       }
+      currentYoutubeIdRef.current = null;
     };
-  }, [isReady, currentSong, volume, onNext]);
+  }, [isReady, currentSong?.youtube_id, volume, onNext]);
 
   // Update current time
   useEffect(() => {
