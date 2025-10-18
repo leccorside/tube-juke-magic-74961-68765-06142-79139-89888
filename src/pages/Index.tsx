@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Loader2, Heart, LogOut } from "lucide-react";
+import { Music2, Loader2, Heart, LogOut, ListMusic } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
@@ -226,6 +226,14 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/playlists")}
+                className="gap-2"
+              >
+                <ListMusic className="w-4 h-4" />
+                Playlists
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/favorites")}

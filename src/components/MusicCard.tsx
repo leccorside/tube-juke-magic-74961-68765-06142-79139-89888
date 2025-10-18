@@ -1,7 +1,9 @@
-import { Play, Download, Trash2, Heart, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Play, Download, Trash2, Heart, Loader2, ListPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 
 interface MusicCardProps {
   id: string;
@@ -19,6 +21,7 @@ interface MusicCardProps {
 }
 
 export const MusicCard = ({
+  id,
   title,
   artist,
   thumbnail,
@@ -31,6 +34,7 @@ export const MusicCard = ({
   onToggleFavorite,
   variant = "library",
 }: MusicCardProps) => {
+  const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -67,7 +71,7 @@ export const MusicCard = ({
             </Button>
           )}
           
-          {/* Library variant: play, favorite, and delete buttons */}
+          {/* Library variant: play, favorite, playlist, and delete buttons */}
           {variant === "library" && (
             <>
               {onPlay && (
@@ -79,6 +83,13 @@ export const MusicCard = ({
                   <Play className="w-6 h-6 fill-current" />
                 </Button>
               )}
+              <Button
+                size="icon"
+                onClick={() => setIsPlaylistDialogOpen(true)}
+                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
+              >
+                <ListPlus className="w-6 h-6" />
+              </Button>
               {onToggleFavorite && (
                 <Button
                   size="icon"
@@ -109,6 +120,12 @@ export const MusicCard = ({
           <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
         </div>
       </div>
+      
+      <AddToPlaylistDialog
+        songId={id}
+        isOpen={isPlaylistDialogOpen}
+        onClose={() => setIsPlaylistDialogOpen(false)}
+      />
     </Card>
   );
 };

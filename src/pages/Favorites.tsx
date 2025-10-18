@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Heart, ArrowLeft } from "lucide-react";
+import { Music2, Heart, ArrowLeft, ListMusic } from "lucide-react";
 import { MusicCard } from "@/components/MusicCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -93,14 +93,23 @@ const Favorites = () => {
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
         <div className="container mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/playlists")}
+              className="gap-2"
+            >
+              <ListMusic className="w-4 h-4" />
+              Playlists
+            </Button>
+          </div>
           
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
