@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ interface MusicPlayerProps {
   } | null;
   onNext?: () => void;
   onPrevious?: () => void;
+  onClose?: () => void;
 }
 
 // Declare YouTube API types
@@ -25,7 +26,7 @@ declare global {
   }
 }
 
-export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProps) => {
+export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
   const playerRef = useRef<any>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -209,7 +210,17 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious }: MusicPlayerProp
       <div ref={playerContainerRef} style={{ display: 'none' }} />
       
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 relative">
+          {/* Close Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            className="absolute -top-2 right-0 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+
           {/* Song Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <img

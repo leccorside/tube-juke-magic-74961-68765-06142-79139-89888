@@ -15,7 +15,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { currentSong, playNext, playPrevious } = useMusicPlayer();
+  const { currentSong, playNext, playPrevious, setCurrentSong } = useMusicPlayer();
   
   return (
     <>
@@ -41,10 +41,11 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       
-      <MusicPlayer
-        currentSong={currentSong}
+      <MusicPlayer 
+        currentSong={currentSong} 
         onNext={playNext}
         onPrevious={playPrevious}
+        onClose={() => setCurrentSong(null)}
       />
     </>
   );
