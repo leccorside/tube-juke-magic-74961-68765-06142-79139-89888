@@ -276,7 +276,7 @@ const Index = () => {
         {searchResults.length > 0 && (
           <div className="mb-12">
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-foreground">Resultados da Busca</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {searchResults.map((result) => (
                 <MusicCard
                   key={result.id}
@@ -298,7 +298,7 @@ const Index = () => {
         {songs && songs.length > 0 && (
           <div>
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-foreground">Sua Biblioteca</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {songs.map((song) => (
                 <MusicCard
                   key={song.id}
