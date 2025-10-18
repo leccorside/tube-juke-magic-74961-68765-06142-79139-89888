@@ -210,13 +210,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       <div ref={playerContainerRef} style={{ display: 'none' }} />
       
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center gap-4 relative">
+        <div className="flex items-center gap-4">
           {/* Close Button */}
           <Button
             size="icon"
             variant="ghost"
             onClick={onClose}
-            className="absolute -top-2 right-0 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground shrink-0"
           >
             <X className="w-4 h-4" />
           </Button>
