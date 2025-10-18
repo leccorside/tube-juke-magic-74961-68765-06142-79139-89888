@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Play, Trash2, Music } from "lucide-react";
 import { toast } from "sonner";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Song {
   id: string;
@@ -26,6 +27,7 @@ interface PlaylistSong {
 export default function PlaylistDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
   const [playlistName, setPlaylistName] = useState("");
   const [songs, setSongs] = useState<PlaylistSong[]>([]);
@@ -115,32 +117,33 @@ export default function PlaylistDetail() {
     <div className="min-h-screen bg-background text-foreground pb-32">
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/playlists")}
+              size={isMobile ? "sm" : "default"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
             {songs.length > 0 && (
-              <Button onClick={playPlaylist} className="gap-2">
-                <Play className="w-5 h-5" />
-                Tocar Playlist
+              <Button onClick={playPlaylist} size={isMobile ? "sm" : "default"}>
+                <Play className="w-4 h-4" />
+                {!isMobile && <span className="ml-2">Tocar Playlist</span>}
               </Button>
             )}
           </div>
           
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
-              <Music className="w-8 h-8 text-primary-foreground" />
+              <Music className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-primary-foreground`} />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent truncate`}>
                 {playlistName}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {songs.length} {songs.length === 1 ? "música" : "músicas"}
               </p>
             </div>
@@ -163,36 +166,37 @@ export default function PlaylistDetail() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {songs.map((playlistSong, index) => {
               const song = playlistSong.songs;
               return (
                 <Card
                   key={playlistSong.id}
-                  className="p-4 hover:shadow-lg transition-shadow group"
+                  className="p-3 md:p-4 hover:shadow-lg transition-shadow group"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-muted-foreground font-mono text-sm w-8">
+                  <div className="flex items-center gap-2 md:gap-4">
+                    <span className={`text-muted-foreground font-mono ${isMobile ? 'text-xs w-6' : 'text-sm w-8'}`}>
                       {index + 1}
                     </span>
                     <img
                       src={song.thumbnail_url || "/placeholder.svg"}
                       alt={song.title}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} rounded-lg object-cover`}
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">
+                      <h3 className={`font-semibold text-foreground truncate ${isMobile ? 'text-sm' : ''}`}>
                         {song.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className={`text-muted-foreground truncate ${isMobile ? 'text-xs' : 'text-sm'}`}>
                         {song.artist}
                       </p>
                     </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className={`flex gap-1 md:gap-2 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={() => playSong(song)}
+                        className={isMobile ? 'h-8 w-8' : ''}
                       >
                         <Play className="w-4 h-4" />
                       </Button>
@@ -200,6 +204,7 @@ export default function PlaylistDetail() {
                         size="icon"
                         variant="ghost"
                         onClick={() => removeSongFromPlaylist(playlistSong.id)}
+                        className={isMobile ? 'h-8 w-8' : ''}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>

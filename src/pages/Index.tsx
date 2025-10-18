@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Song {
   id: string;
@@ -32,6 +33,7 @@ const Index = () => {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -210,45 +212,50 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground pb-32">
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
+          <div className="flex flex-col gap-4 md:gap-0 md:flex-row md:items-center md:justify-between mb-4 md:mb-8">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
-                <Music2 className="w-8 h-8 text-primary-foreground" />
+                <Music2 className="w-6 h-6 md:w-8 md:h-8 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Music Platform
-                </h1>
-                <p className="text-muted-foreground">
-                  Busque e ouça suas músicas favoritas do YouTube
-                </p>
-              </div>
+              {!isMobile && (
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    Music Platform
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Busque e ouça suas músicas favoritas do YouTube
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 onClick={() => navigate("/playlists")}
-                className="gap-2"
+                size={isMobile ? "sm" : "default"}
+                className="flex-1 md:flex-none"
               >
                 <ListMusic className="w-4 h-4" />
-                Playlists
+                {!isMobile && <span className="ml-2">Playlists</span>}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/favorites")}
-                className="gap-2"
+                size={isMobile ? "sm" : "default"}
+                className="flex-1 md:flex-none"
               >
                 <Heart className="w-4 h-4" />
-                Favoritos
+                {!isMobile && <span className="ml-2">Favoritos</span>}
               </Button>
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className="gap-2"
+                size={isMobile ? "sm" : "default"}
+                className="flex-1 md:flex-none"
               >
                 <LogOut className="w-4 h-4" />
-                Sair
+                {!isMobile && <span className="ml-2">Sair</span>}
               </Button>
             </div>
           </div>
@@ -268,8 +275,8 @@ const Index = () => {
 
         {searchResults.length > 0 && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-foreground">Resultados da Busca</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-foreground">Resultados da Busca</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {searchResults.map((result) => (
                 <MusicCard
                   key={result.id}
@@ -290,8 +297,8 @@ const Index = () => {
         {/* Library */}
         {songs && songs.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-6 text-foreground">Sua Biblioteca</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-foreground">Sua Biblioteca</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {songs.map((song) => (
                 <MusicCard
                   key={song.id}

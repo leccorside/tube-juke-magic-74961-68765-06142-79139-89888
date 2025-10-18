@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Music, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Playlist {
   id: string;
@@ -21,6 +22,7 @@ export default function Playlists() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadPlaylists();
@@ -100,20 +102,21 @@ export default function Playlists() {
     <div className="min-h-screen bg-background text-foreground pb-32">
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
+              size={isMobile ? "sm" : "default"}
             >
               <Music className="w-4 h-4 mr-2" />
               Voltar
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button size={isMobile ? "sm" : "default"}>
                   <Plus className="w-4 h-4" />
-                  Nova Playlist
+                  {!isMobile && <span className="ml-2">Nova Playlist</span>}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -137,15 +140,17 @@ export default function Playlists() {
           
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
-              <Music className="w-8 h-8 text-primary-foreground" />
+              <Music className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-primary-foreground`} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent`}>
                 Minhas Playlists
               </h1>
-              <p className="text-muted-foreground">
-                Crie e organize suas playlists
-              </p>
+              {!isMobile && (
+                <p className="text-muted-foreground">
+                  Crie e organize suas playlists
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -166,7 +171,7 @@ export default function Playlists() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {playlists.map((playlist) => (
               <Card
                 key={playlist.id}

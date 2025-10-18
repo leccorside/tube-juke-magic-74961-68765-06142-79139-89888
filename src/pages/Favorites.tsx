@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Song {
   id: string;
@@ -23,6 +24,7 @@ const Favorites = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
 
   // Fetch favorite songs
@@ -92,11 +94,12 @@ const Favorites = () => {
     <div className="min-h-screen bg-background text-foreground pb-32">
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
               onClick={() => navigate("/")}
+              size={isMobile ? "sm" : "default"}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
@@ -104,24 +107,26 @@ const Favorites = () => {
             <Button
               variant="outline"
               onClick={() => navigate("/playlists")}
-              className="gap-2"
+              size={isMobile ? "sm" : "default"}
             >
               <ListMusic className="w-4 h-4" />
-              Playlists
+              {!isMobile && <span className="ml-2">Playlists</span>}
             </Button>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
-              <Heart className="w-8 h-8 text-primary-foreground fill-current" />
+              <Heart className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-primary-foreground fill-current`} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent`}>
                 Favoritos
               </h1>
-              <p className="text-muted-foreground">
-                Suas músicas favoritas
-              </p>
+              {!isMobile && (
+                <p className="text-muted-foreground">
+                  Suas músicas favoritas
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -129,7 +134,7 @@ const Favorites = () => {
 
       <main className="container mx-auto px-4 py-8">
         {favorites && favorites.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {favorites.map((song: any) => (
               <MusicCard
                 key={song.id}

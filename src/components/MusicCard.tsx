@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MusicCardProps {
   id: string;
@@ -35,6 +36,8 @@ export const MusicCard = ({
   variant = "library",
 }: MusicCardProps) => {
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
+  
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -59,15 +62,15 @@ export const MusicCard = ({
           </div>
         )}
         
-        <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? 'flex-wrap gap-1 p-2' : 'gap-2'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
           {/* Search variant: only download button */}
           {variant === "search" && onDownload && !isDownloading && (
             <Button
               size="icon"
               onClick={onDownload}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
+              className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
             >
-              <Download className="w-6 h-6" />
+              <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
             </Button>
           )}
           
@@ -78,25 +81,25 @@ export const MusicCard = ({
                 <Button
                   size="icon"
                   onClick={onPlay}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 shadow-lg"
+                  className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
                 >
-                  <Play className="w-6 h-6 fill-current" />
+                  <Play className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} fill-current`} />
                 </Button>
               )}
               <Button
                 size="icon"
                 onClick={() => setIsPlaylistDialogOpen(true)}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
+                className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
               >
-                <ListPlus className="w-6 h-6" />
+                <ListPlus className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
               </Button>
               {onToggleFavorite && (
                 <Button
                   size="icon"
                   onClick={onToggleFavorite}
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
+                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
                 >
-                  <Heart className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
               )}
               {onDelete && (
@@ -104,20 +107,20 @@ export const MusicCard = ({
                   size="icon"
                   onClick={onDelete}
                   variant="destructive"
-                  className="rounded-full w-12 h-12 shadow-lg"
+                  className={`rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
                 >
-                  <Trash2 className="w-6 h-6" />
+                  <Trash2 className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
                 </Button>
               )}
             </>
           )}
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-foreground truncate mb-1">{title}</h3>
+      <div className={isMobile ? 'p-3' : 'p-4'}>
+        <h3 className={`font-semibold text-foreground truncate mb-1 ${isMobile ? 'text-sm' : ''}`}>{title}</h3>
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground truncate">{artist}</p>
-          <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
+          <p className={`text-muted-foreground truncate ${isMobile ? 'text-xs' : 'text-sm'}`}>{artist}</p>
+          <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{formatDuration(duration)}</span>
         </div>
       </div>
       
