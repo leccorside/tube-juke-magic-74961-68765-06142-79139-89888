@@ -7,11 +7,13 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider, useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Favorites from "./pages/Favorites";
 import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,7 @@ const AppContent = () => {
     <>
       <Routes>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/install" element={<Install />} />
         <Route
           path="/"
           element={
@@ -58,6 +61,8 @@ const AppContent = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      
+      <InstallPrompt />
       
       <MusicPlayer 
         currentSong={currentSong} 
