@@ -97,43 +97,73 @@ export default function Playlists() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pb-24">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground">Minhas Playlists</h1>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nova Playlist
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Playlist</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <Input
-                  placeholder="Nome da playlist"
-                  value={newPlaylistName}
-                  onChange={(e) => setNewPlaylistName(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && createPlaylist()}
-                />
-                <Button onClick={createPlaylist} className="w-full">
-                  Criar Playlist
+    <div className="min-h-screen bg-background text-foreground pb-32">
+      {/* Header */}
+      <header className="border-b border-border bg-gradient-to-r from-background to-card">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+            >
+              <Music className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Nova Playlist
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Nova Playlist</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <Input
+                    placeholder="Nome da playlist"
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && createPlaylist()}
+                  />
+                  <Button onClick={createPlaylist} className="w-full">
+                    Criar Playlist
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
+              <Music className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Minhas Playlists
+              </h1>
+              <p className="text-muted-foreground">
+                Crie e organize suas playlists
+              </p>
+            </div>
+          </div>
         </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
 
         {isLoading ? (
           <div className="text-center text-muted-foreground">Carregando...</div>
         ) : playlists.length === 0 ? (
           <div className="text-center py-12">
             <Music className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Você ainda não tem playlists</p>
-            <p className="text-sm text-muted-foreground">Crie sua primeira playlist para começar!</p>
+            <h3 className="text-xl font-semibold mb-2 text-foreground">
+              Nenhuma playlist ainda
+            </h3>
+            <p className="text-muted-foreground">
+              Crie sua primeira playlist para começar!
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -167,7 +197,7 @@ export default function Playlists() {
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

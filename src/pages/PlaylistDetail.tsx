@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Play, Trash2 } from "lucide-react";
+import { ArrowLeft, Play, Trash2, Music } from "lucide-react";
 import { toast } from "sonner";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 
@@ -112,41 +112,56 @@ export default function PlaylistDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pb-24">
-      <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/playlists")}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
-
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">{playlistName}</h1>
-            <p className="text-muted-foreground">
-              {songs.length} {songs.length === 1 ? "música" : "músicas"}
-            </p>
-          </div>
-          {songs.length > 0 && (
-            <Button onClick={playPlaylist} size="lg" className="gap-2">
-              <Play className="w-5 h-5" />
-              Tocar Playlist
+    <div className="min-h-screen bg-background text-foreground pb-32">
+      {/* Header */}
+      <header className="border-b border-border bg-gradient-to-r from-background to-card">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/playlists")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
             </Button>
-          )}
+            {songs.length > 0 && (
+              <Button onClick={playPlaylist} className="gap-2">
+                <Play className="w-5 h-5" />
+                Tocar Playlist
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
+              <Music className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {playlistName}
+              </h1>
+              <p className="text-muted-foreground">
+                {songs.length} {songs.length === 1 ? "música" : "músicas"}
+              </p>
+            </div>
+          </div>
         </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
 
         {isLoading ? (
           <div className="text-center text-muted-foreground">Carregando...</div>
         ) : songs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">Esta playlist está vazia</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="text-center py-12">
+            <Music className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2 text-foreground">
+              Esta playlist está vazia
+            </h3>
+            <p className="text-muted-foreground">
               Adicione músicas à playlist através do botão "+" nas suas músicas
             </p>
-          </Card>
+          </div>
         ) : (
           <div className="space-y-4">
             {songs.map((playlistSong, index) => {
@@ -195,7 +210,7 @@ export default function PlaylistDetail() {
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
