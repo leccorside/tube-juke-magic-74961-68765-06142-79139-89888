@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Music2, Loader2, Heart, LogOut } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
-import { MusicPlayer } from "@/components/MusicPlayer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useNavigate } from "react-router-dom";
 
 interface Song {
@@ -32,10 +32,10 @@ const Index = () => {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { setCurrentSong, setPlaylist } = useMusicPlayer();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
 
   // Fetch user's songs from database
   const { data: songs, refetch: refetchSongs } = useQuery({
@@ -52,6 +52,13 @@ const Index = () => {
     },
     enabled: !!user,
   });
+
+  // Update playlist when songs change
+  useEffect(() => {
+    if (songs) {
+      setPlaylist(songs);
+    }
+  }, [songs, setPlaylist]);
 
   // Fetch user's favorites
   const { data: favorites, refetch: refetchFavorites } = useQuery({
@@ -141,10 +148,6 @@ const Index = () => {
         title: "Música removida",
         description: "A música foi removida da sua biblioteca",
       });
-      
-      if (currentSong?.id === songId) {
-        setCurrentSong(null);
-      }
     } catch (error) {
       console.error("Delete error:", error);
       toast({
@@ -312,27 +315,6 @@ const Index = () => {
           </div>
         )}
       </main>
-
-      {/* Music Player */}
-      <MusicPlayer
-        currentSong={currentSong}
-        onNext={() => {
-          if (songs && currentSong) {
-            const currentIndex = songs.findIndex((s) => s.id === currentSong.id);
-            if (currentIndex < songs.length - 1) {
-              setCurrentSong(songs[currentIndex + 1]);
-            }
-          }
-        }}
-        onPrevious={() => {
-          if (songs && currentSong) {
-            const currentIndex = songs.findIndex((s) => s.id === currentSong.id);
-            if (currentIndex > 0) {
-              setCurrentSong(songs[currentIndex - 1]);
-            }
-          }
-        }}
-      />
     </div>
   );
 };

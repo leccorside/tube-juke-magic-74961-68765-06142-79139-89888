@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Music2, Heart, ArrowLeft } from "lucide-react";
 import { MusicCard } from "@/components/MusicCard";
-import { MusicPlayer } from "@/components/MusicPlayer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +23,7 @@ const Favorites = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const { setCurrentSong, setPlaylist } = useMusicPlayer();
 
   // Fetch favorite songs
   const { data: favorites, refetch: refetchFavorites } = useQuery({
@@ -52,6 +52,13 @@ const Favorites = () => {
     enabled: !!user,
   });
 
+  // Update playlist when favorites change
+  useEffect(() => {
+    if (favorites) {
+      setPlaylist(favorites);
+    }
+  }, [favorites, setPlaylist]);
+
   const handleRemoveFavorite = async (favoriteId: string, songId: string) => {
     try {
       const { error } = await (supabase as any)
@@ -67,10 +74,6 @@ const Favorites = () => {
         title: "Removido dos favoritos",
         description: "A música foi removida dos seus favoritos",
       });
-
-      if (currentSong?.id === songId) {
-        setCurrentSong(null);
-      }
     } catch (error) {
       console.error("Remove favorite error:", error);
       toast({
@@ -144,27 +147,6 @@ const Favorites = () => {
           </div>
         )}
       </main>
-
-      {/* Music Player */}
-      <MusicPlayer
-        currentSong={currentSong}
-        onNext={() => {
-          if (favorites && currentSong) {
-            const currentIndex = favorites.findIndex((s: any) => s.id === currentSong.id);
-            if (currentIndex < favorites.length - 1) {
-              setCurrentSong(favorites[currentIndex + 1]);
-            }
-          }
-        }}
-        onPrevious={() => {
-          if (favorites && currentSong) {
-            const currentIndex = favorites.findIndex((s: any) => s.id === currentSong.id);
-            if (currentIndex > 0) {
-              setCurrentSong(favorites[currentIndex - 1]);
-            }
-          }
-        }}
-      />
     </div>
   );
 };
