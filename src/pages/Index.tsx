@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Loader2 } from "lucide-react";
+import { Music2, Loader2, Heart, LogOut } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface Song {
   id: string;
@@ -27,28 +30,42 @@ interface SearchResult {
 
 const Index = () => {
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
 
-  // Fetch all songs from database
+  // Fetch user's songs from database
   const { data: songs, refetch: refetchSongs } = useQuery({
-    queryKey: ["songs"],
+    queryKey: ["songs", user?.id],
     queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/songs?select=*&order=created_at.desc`,
-        {
-          headers: {
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-        }
-      );
+      const { data, error } = await (supabase as any)
+        .from("songs")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
 
-      if (!response.ok) throw new Error("Failed to fetch songs");
-      return (await response.json()) as Song[];
+      if (error) throw error;
+      return data as Song[];
     },
+    enabled: !!user,
+  });
+
+  // Fetch user's favorites
+  const { data: favorites, refetch: refetchFavorites } = useQuery({
+    queryKey: ["favorites", user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("favorites")
+        .select("song_id")
+        .eq("user_id", user?.id);
+
+      if (error) throw error;
+      return data.map((fav: any) => fav.song_id);
+    },
+    enabled: !!user,
   });
 
   const handleSearch = async (query: string) => {
@@ -113,11 +130,11 @@ const Index = () => {
       const { error } = await (supabase as any)
         .from("songs")
         .delete()
-        .eq("id", songId);
+        .eq("id", songId)
+        .eq("user_id", user?.id);
 
       if (error) throw error;
       
-      // Refetch the songs list
       await refetchSongs();
       
       toast({
@@ -138,12 +155,52 @@ const Index = () => {
     }
   };
 
-  const handlePlay = (song: Song) => {
-    setCurrentSong(song);
+  const handleToggleFavorite = async (songId: string) => {
+    try {
+      const isFavorite = favorites?.includes(songId);
+      
+      if (isFavorite) {
+        const { error } = await (supabase as any)
+          .from("favorites")
+          .delete()
+          .eq("song_id", songId)
+          .eq("user_id", user?.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Removido dos favoritos",
+          description: "A música foi removida dos seus favoritos",
+        });
+      } else {
+        const { error } = await (supabase as any)
+          .from("favorites")
+          .insert({
+            song_id: songId,
+            user_id: user?.id,
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Adicionado aos favoritos",
+          description: "A música foi adicionada aos seus favoritos",
+        });
+      }
+      
+      await refetchFavorites();
+    } catch (error) {
+      console.error("Toggle favorite error:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os favoritos. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handlePlayFromSearch = async (result: SearchResult) => {
-    await handleDownload(result.id);
+  const handlePlay = (song: Song) => {
+    setCurrentSong(song);
   };
 
   return (
@@ -151,17 +208,37 @@ const Index = () => {
       {/* Header */}
       <header className="border-b border-border bg-gradient-to-r from-background to-card">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
-              <Music2 className="w-8 h-8 text-primary-foreground" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
+                <Music2 className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Music Platform
+                </h1>
+                <p className="text-muted-foreground">
+                  Busque e ouça suas músicas favoritas do YouTube
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Music Platform
-              </h1>
-              <p className="text-muted-foreground">
-                Busque e ouça suas músicas favoritas do YouTube
-              </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/favorites")}
+                className="gap-2"
+              >
+                <Heart className="w-4 h-4" />
+                Favoritos
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={signOut}
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
             </div>
           </div>
 
@@ -190,9 +267,9 @@ const Index = () => {
                   artist={result.artist}
                   thumbnail={result.thumbnail}
                   duration={result.duration}
-                  onPlay={() => handlePlayFromSearch(result)}
                   onDownload={() => handleDownload(result.id)}
                   isDownloading={downloadingId === result.id}
+                  variant="search"
                 />
               ))}
             </div>
@@ -214,6 +291,9 @@ const Index = () => {
                   duration={song.duration}
                   onPlay={() => handlePlay(song)}
                   onDelete={() => handleDelete(song.id)}
+                  onToggleFavorite={() => handleToggleFavorite(song.id)}
+                  isFavorite={favorites?.includes(song.id)}
+                  variant="library"
                 />
               ))}
             </div>

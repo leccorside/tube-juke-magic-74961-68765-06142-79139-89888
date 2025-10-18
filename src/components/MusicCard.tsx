@@ -1,6 +1,7 @@
-import { Play, Download, Trash2 } from "lucide-react";
+import { Play, Download, Trash2, Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface MusicCardProps {
   id: string;
@@ -8,10 +9,13 @@ interface MusicCardProps {
   artist: string;
   thumbnail: string;
   duration: number;
-  onPlay: () => void;
+  onPlay?: () => void;
   onDownload?: () => void;
   onDelete?: () => void;
   isDownloading?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  variant?: "search" | "library";
 }
 
 export const MusicCard = ({
@@ -23,6 +27,9 @@ export const MusicCard = ({
   onDownload,
   onDelete,
   isDownloading,
+  isFavorite,
+  onToggleFavorite,
+  variant = "library",
 }: MusicCardProps) => {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -39,33 +46,59 @@ export const MusicCard = ({
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Download progress indicator */}
+        {isDownloading && (
+          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
+            <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+            <span className="text-sm text-white">Baixando...</span>
+          </div>
+        )}
+        
         <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            size="icon"
-            onClick={onPlay}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 shadow-lg"
-          >
-            <Play className="w-6 h-6 fill-current" />
-          </Button>
-          {onDownload && (
+          {/* Search variant: only download button */}
+          {variant === "search" && onDownload && !isDownloading && (
             <Button
               size="icon"
               onClick={onDownload}
-              disabled={isDownloading}
               className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
             >
               <Download className="w-6 h-6" />
             </Button>
           )}
-          {onDelete && (
-            <Button
-              size="icon"
-              onClick={onDelete}
-              variant="destructive"
-              className="rounded-full w-12 h-12 shadow-lg"
-            >
-              <Trash2 className="w-6 h-6" />
-            </Button>
+          
+          {/* Library variant: play, favorite, and delete buttons */}
+          {variant === "library" && (
+            <>
+              {onPlay && (
+                <Button
+                  size="icon"
+                  onClick={onPlay}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 shadow-lg"
+                >
+                  <Play className="w-6 h-6 fill-current" />
+                </Button>
+              )}
+              {onToggleFavorite && (
+                <Button
+                  size="icon"
+                  onClick={onToggleFavorite}
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-12 h-12 shadow-lg"
+                >
+                  <Heart className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`} />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  size="icon"
+                  onClick={onDelete}
+                  variant="destructive"
+                  className="rounded-full w-12 h-12 shadow-lg"
+                >
+                  <Trash2 className="w-6 h-6" />
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

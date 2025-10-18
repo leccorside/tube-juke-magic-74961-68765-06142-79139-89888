@@ -137,6 +137,25 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get user from authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
     const { action, query, videoId } = await req.json();
 
     if (action === 'search') {
@@ -148,15 +167,16 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (action === 'download') {
-      // Check if song already exists
+      // Check if song already exists for this user
       const { data: existingSong } = await supabase
         .from('songs')
         .select('*')
         .eq('youtube_id', videoId)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (existingSong) {
-        console.log('Song already exists:', existingSong);
+        console.log('Song already exists for user:', existingSong);
         return new Response(
           JSON.stringify({ success: true, song: existingSong }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -184,6 +204,7 @@ Deno.serve(async (req) => {
           thumbnail_url: videoInfo.thumbnail,
           audio_url: playbackUrl, // Store YouTube URL
           youtube_id: videoId,
+          user_id: user.id, // Associate with user
         })
         .select()
         .single();
