@@ -7,11 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Invidious instances for fallback
+// Invidious instances for fallback - updated with more reliable instances
 const INVIDIOUS_INSTANCES = [
-  'https://inv.nadeko.net',
-  'https://invidious.nerdvpn.de',
-  'https://invidious.private.coffee',
+  'https://iv.nboeck.de',
+  'https://invidious.privacyredirect.com',
+  'https://inv.tux.pizza',
+  'https://invidious.jing.rocks',
+  'https://iv.melmac.space',
 ];
 
 interface AudioFormat {
