@@ -125,14 +125,10 @@ serve(async (req) => {
 
     const audioUrl = await getAudioStreamUrl(youtubeId);
     
-    // Fetch the audio and stream it back
+    // Fetch the audio and stream it back with minimal headers
     const audioResponse = await fetch(audioUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'audio/webm,audio/ogg,audio/*;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': `https://www.youtube.com/watch?v=${youtubeId}`,
-        'Origin': 'https://www.youtube.com'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
 

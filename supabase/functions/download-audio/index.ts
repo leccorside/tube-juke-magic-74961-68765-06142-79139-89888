@@ -123,19 +123,10 @@ serve(async (req) => {
     // Get audio stream URL
     const { url: audioUrl, mimeType } = await getAudioStreamUrl(youtubeId);
 
-    // Fetch the audio file with comprehensive headers
+    // Fetch the audio file with minimal headers to avoid detection
     const audioResponse = await fetch(audioUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'audio/webm,audio/ogg,audio/*;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'identity',
-        'Range': 'bytes=0-',
-        'Referer': `https://www.youtube.com/watch?v=${youtubeId}`,
-        'Origin': 'https://www.youtube.com',
-        'Sec-Fetch-Dest': 'audio',
-        'Sec-Fetch-Mode': 'no-cors',
-        'Sec-Fetch-Site': 'cross-site'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
       redirect: 'follow'
     });
