@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Play, Download, Trash2, Heart, Loader2, ListPlus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Play, Download, Trash2, Heart, Loader2, ListPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface MusicCardProps {
   id: string;
@@ -19,6 +20,7 @@ interface MusicCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   variant?: "search" | "library";
+  youtubeId?: string;
 }
 
 export const MusicCard = ({
@@ -34,9 +36,68 @@ export const MusicCard = ({
   isFavorite,
   onToggleFavorite,
   variant = "library",
+  youtubeId,
 }: MusicCardProps) => {
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    checkOfflineStatus();
+  }, [id]);
+
+  const checkOfflineStatus = async () => {
+    try {
+      const cache = await caches.open('music-offline-v1');
+      const response = await cache.match(`/offline-music/${id}`);
+      setIsOfflineAvailable(!!response);
+    } catch (error) {
+      console.error('Error checking offline status:', error);
+    }
+  };
+
+  const handleOfflineDownload = async () => {
+    try {
+      const cache = await caches.open('music-offline-v1');
+      
+      // Cache song metadata
+      const songData = {
+        id,
+        title,
+        artist,
+        thumbnail,
+        duration,
+        youtubeId,
+      };
+      
+      const response = new Response(JSON.stringify(songData), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      await cache.put(`/offline-music/${id}`, response);
+      
+      // Cache thumbnail
+      await cache.add(thumbnail);
+      
+      setIsOfflineAvailable(true);
+      toast.success("Música marcada para acesso offline!");
+    } catch (error) {
+      console.error('Error saving for offline:', error);
+      toast.error("Erro ao salvar para offline");
+    }
+  };
+
+  const handleRemoveOffline = async () => {
+    try {
+      const cache = await caches.open('music-offline-v1');
+      await cache.delete(`/offline-music/${id}`);
+      setIsOfflineAvailable(false);
+      toast.success("Música removida do modo offline");
+    } catch (error) {
+      console.error('Error removing offline:', error);
+      toast.error("Erro ao remover do modo offline");
+    }
+  };
   
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -102,6 +163,17 @@ export const MusicCard = ({
                   <Heart className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} ${isFavorite ? "fill-current" : ""}`} />
                 </Button>
               )}
+              <Button
+                size="icon"
+                onClick={isOfflineAvailable ? handleRemoveOffline : handleOfflineDownload}
+                className={`${isOfflineAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-accent hover:bg-accent/90'} text-white rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
+              >
+                {isOfflineAvailable ? (
+                  <Check className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
+                ) : (
+                  <Download className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
+                )}
+              </Button>
               {onDelete && (
                 <Button
                   size="icon"

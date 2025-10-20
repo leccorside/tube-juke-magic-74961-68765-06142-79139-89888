@@ -146,6 +146,7 @@ const Favorites = () => {
                 onPlay={() => handlePlay(song)}
                 onDelete={() => handleRemoveFavorite(song.favoriteId, song.id)}
                 isFavorite
+                youtubeId={song.youtube_id}
               />
             ))}
           </div>

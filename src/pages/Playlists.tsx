@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Music, Trash2 } from "lucide-react";
+import { Plus, Music, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 
 interface Playlist {
   id: string;
@@ -23,6 +24,7 @@ export default function Playlists() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { setCurrentSong, setPlaylist } = useMusicPlayer();
 
   useEffect(() => {
     loadPlaylists();
@@ -95,6 +97,40 @@ export default function Playlists() {
       loadPlaylists();
     } catch (error: any) {
       toast.error("Erro ao excluir playlist: " + error.message);
+    }
+  };
+
+  const playPlaylist = async (playlistId: string) => {
+    try {
+      const { data: songsData, error } = await supabase
+        .from("playlist_songs")
+        .select(`
+          songs (
+            id,
+            title,
+            artist,
+            thumbnail_url,
+            audio_url,
+            duration,
+            youtube_id
+          )
+        `)
+        .eq("playlist_id", playlistId)
+        .order("position", { ascending: true });
+
+      if (error) throw error;
+
+      if (!songsData || songsData.length === 0) {
+        toast.error("Esta playlist está vazia");
+        return;
+      }
+
+      const songs = songsData.map((ps: any) => ps.songs);
+      setPlaylist(songs);
+      setCurrentSong(songs[0]);
+      toast.success("Tocando playlist!");
+    } catch (error: any) {
+      toast.error("Erro ao tocar playlist: " + error.message);
     }
   };
 
@@ -182,17 +218,30 @@ export default function Playlists() {
                   <div className="bg-primary/10 p-4 rounded-lg">
                     <Music className="w-8 h-8 text-primary" />
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deletePlaylist(playlist.id);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playPlaylist(playlist.id);
+                      }}
+                    >
+                      <Play className="w-4 h-4 text-primary" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deletePlaylist(playlist.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{playlist.name}</h3>
                 <p className="text-sm text-muted-foreground">

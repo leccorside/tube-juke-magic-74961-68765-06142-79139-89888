@@ -156,6 +156,69 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  // Media Session API for background playback and lock screen controls
+  useEffect(() => {
+    if (!currentSong || typeof navigator.mediaSession === 'undefined') return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentSong.title,
+      artist: currentSong.artist,
+      artwork: [
+        { src: currentSong.thumbnail_url, sizes: '96x96', type: 'image/jpeg' },
+        { src: currentSong.thumbnail_url, sizes: '128x128', type: 'image/jpeg' },
+        { src: currentSong.thumbnail_url, sizes: '192x192', type: 'image/jpeg' },
+        { src: currentSong.thumbnail_url, sizes: '256x256', type: 'image/jpeg' },
+        { src: currentSong.thumbnail_url, sizes: '384x384', type: 'image/jpeg' },
+        { src: currentSong.thumbnail_url, sizes: '512x512', type: 'image/jpeg' },
+      ],
+    });
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (playerRef.current) {
+        playerRef.current.playVideo();
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (playerRef.current) {
+        playerRef.current.pauseVideo();
+      }
+    });
+
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (onPrevious) onPrevious();
+    });
+
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (onNext) onNext();
+    });
+
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (playerRef.current && details.seekTime) {
+        playerRef.current.seekTo(details.seekTime, true);
+        setCurrentTime(details.seekTime);
+      }
+    });
+
+    return () => {
+      if (typeof navigator.mediaSession !== 'undefined') {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+        navigator.mediaSession.setActionHandler('previoustrack', null);
+        navigator.mediaSession.setActionHandler('nexttrack', null);
+        navigator.mediaSession.setActionHandler('seekto', null);
+      }
+    };
+  }, [currentSong, onNext, onPrevious]);
+
+  // Update playback state for Media Session
+  useEffect(() => {
+    if (typeof navigator.mediaSession !== 'undefined') {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [isPlaying]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {

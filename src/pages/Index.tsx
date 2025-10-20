@@ -288,6 +288,7 @@ const Index = () => {
                   onDownload={() => handleDownload(result.id)}
                   isDownloading={downloadingId === result.id}
                   variant="search"
+                  youtubeId={result.id}
                 />
               ))}
             </div>
@@ -312,6 +313,7 @@ const Index = () => {
                   onToggleFavorite={() => handleToggleFavorite(song.id)}
                   isFavorite={favorites?.includes(song.id)}
                   variant="library"
+                  youtubeId={song.youtube_id}
                 />
               ))}
             </div>
