@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Favorites from "./pages/Favorites";
 import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
+import Offline from "./pages/Offline";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <PlaylistDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/offline"
+          element={
+            <ProtectedRoute>
+              <Offline />
             </ProtectedRoute>
           }
         />

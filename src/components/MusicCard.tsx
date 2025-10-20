@@ -40,16 +40,21 @@ export const MusicCard = ({
 }: MusicCardProps) => {
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloadingOffline, setIsDownloadingOffline] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     checkOfflineStatus();
-  }, [id]);
+  }, [youtubeId]);
 
   const checkOfflineStatus = async () => {
+    if (!('caches' in window) || !youtubeId) return;
+
     try {
       const cache = await caches.open('music-offline-v1');
-      const response = await cache.match(`/offline-music/${id}`);
+      const audioRequest = new Request(`/offline-audio/${youtubeId}`);
+      const response = await cache.match(audioRequest);
       setIsOfflineAvailable(!!response);
     } catch (error) {
       console.error('Error checking offline status:', error);
@@ -57,45 +62,107 @@ export const MusicCard = ({
   };
 
   const handleOfflineDownload = async () => {
+    if (!('caches' in window) || !youtubeId) {
+      toast.error("Seu navegador não suporta armazenamento offline");
+      return;
+    }
+
+    if (isDownloadingOffline) return;
+
     try {
-      const cache = await caches.open('music-offline-v1');
+      setIsDownloadingOffline(true);
+      setDownloadProgress(0);
+      toast.loading('Preparando download...', { id: 'download-offline' });
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await supabase.functions.invoke('get-audio-stream', {
+        body: { youtubeId }
+      });
+
+      if (response.error) throw response.error;
       
-      // Cache song metadata
-      const songData = {
+      const { audioUrl } = response.data;
+
+      const audioResponse = await fetch(audioUrl);
+      if (!audioResponse.ok) throw new Error('Failed to download audio');
+
+      const reader = audioResponse.body?.getReader();
+      const contentLength = parseInt(audioResponse.headers.get('content-length') || '0');
+      
+      let receivedLength = 0;
+      const chunks: Uint8Array[] = [];
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          chunks.push(value);
+          receivedLength += value.length;
+
+          const progress = contentLength > 0 ? (receivedLength / contentLength) * 100 : 0;
+          setDownloadProgress(progress);
+          
+          toast.loading(`Baixando: ${Math.round(progress)}%`, { id: 'download-offline' });
+        }
+      }
+
+      const audioBlob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' });
+
+      const cache = await caches.open('music-offline-v1');
+
+      const audioRequest = new Request(`/offline-audio/${youtubeId}`);
+      await cache.put(audioRequest, new Response(audioBlob));
+
+      const metadata = {
         id,
         title,
         artist,
-        thumbnail,
-        duration,
+        thumbnailUrl: thumbnail,
         youtubeId,
+        downloadedAt: new Date().toISOString()
       };
-      
-      const response = new Response(JSON.stringify(songData), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      await cache.put(`/offline-music/${id}`, response);
-      
-      // Cache thumbnail
-      await cache.add(thumbnail);
-      
+
+      const metadataRequest = new Request(`/offline-metadata/${youtubeId}`);
+      await cache.put(metadataRequest, new Response(JSON.stringify(metadata)));
+
+      try {
+        const thumbResponse = await fetch(thumbnail);
+        if (thumbResponse.ok) {
+          await cache.put(thumbnail, thumbResponse.clone());
+        }
+      } catch (error) {
+        console.error('Error caching thumbnail:', error);
+      }
+
       setIsOfflineAvailable(true);
-      toast.success("Música marcada para acesso offline!");
+      toast.success("Música disponível offline!", { id: 'download-offline' });
     } catch (error) {
-      console.error('Error saving for offline:', error);
-      toast.error("Erro ao salvar para offline");
+      console.error('Error making song available offline:', error);
+      toast.error("Erro ao baixar música", { id: 'download-offline' });
+    } finally {
+      setIsDownloadingOffline(false);
+      setDownloadProgress(0);
     }
   };
 
   const handleRemoveOffline = async () => {
+    if (!('caches' in window) || !youtubeId) return;
+
     try {
       const cache = await caches.open('music-offline-v1');
-      await cache.delete(`/offline-music/${id}`);
+      
+      await cache.delete(new Request(`/offline-audio/${youtubeId}`));
+      await cache.delete(new Request(`/offline-metadata/${youtubeId}`));
+      
       setIsOfflineAvailable(false);
-      toast.success("Música removida do modo offline");
+      toast.success("Removido do offline");
     } catch (error) {
-      console.error('Error removing offline:', error);
-      toast.error("Erro ao remover do modo offline");
+      console.error('Error removing from offline:', error);
+      toast.error("Erro ao remover do offline");
     }
   };
   
@@ -171,17 +238,23 @@ export const MusicCard = ({
                     <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
                   </Button>
                 )}
-                <Button
-                  size="icon"
-                  onClick={isOfflineAvailable ? handleRemoveOffline : handleOfflineDownload}
-                  className={`${isOfflineAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-accent hover:bg-accent/90'} text-white rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                >
-                  {isOfflineAvailable ? (
-                    <Check className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                  ) : (
-                    <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                  )}
-                </Button>
+                {youtubeId && (
+                  <Button
+                    size="icon"
+                    onClick={isOfflineAvailable ? handleRemoveOffline : handleOfflineDownload}
+                    disabled={isDownloadingOffline}
+                    className={`${isOfflineAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-accent hover:bg-accent/90'} text-white rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                    title={isDownloadingOffline ? `Baixando ${Math.round(downloadProgress)}%` : (isOfflineAvailable ? 'Disponível offline' : 'Baixar para offline')}
+                  >
+                    {isDownloadingOffline ? (
+                      <span className="text-[10px] font-bold">{Math.round(downloadProgress)}</span>
+                    ) : isOfflineAvailable ? (
+                      <Check className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                    ) : (
+                      <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                    )}
+                  </Button>
+                )}
                 {onDelete && (
                   <Button
                     size="icon"

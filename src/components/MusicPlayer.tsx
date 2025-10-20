@@ -3,6 +3,7 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
+import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 
 interface MusicPlayerProps {
   currentSong: {
@@ -29,11 +30,62 @@ declare global {
 export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
   const playerRef = useRef<any>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [isReady, setIsReady] = useState(false);
+  const [useOfflineAudio, setUseOfflineAudio] = useState(false);
+  const [offlineAudioUrl, setOfflineAudioUrl] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Check if song is available offline
+  useEffect(() => {
+    const checkOfflineAvailability = async () => {
+      if (!currentSong || !('caches' in window)) {
+        setUseOfflineAudio(false);
+        setOfflineAudioUrl(null);
+        return;
+      }
+
+      try {
+        const cache = await caches.open('music-offline-v1');
+        const audioRequest = new Request(`/offline-audio/${currentSong.youtube_id}`);
+        const response = await cache.match(audioRequest);
+        
+        if (response) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setOfflineAudioUrl(url);
+          setUseOfflineAudio(!isOnline);
+        } else {
+          setUseOfflineAudio(false);
+          setOfflineAudioUrl(null);
+        }
+      } catch (error) {
+        console.error('Error checking offline audio:', error);
+        setUseOfflineAudio(false);
+        setOfflineAudioUrl(null);
+      }
+    };
+
+    checkOfflineAvailability();
+  }, [currentSong?.youtube_id, isOnline]);
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -138,10 +190,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
   // Update volume when it changes
   useEffect(() => {
-    if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
+    if (useOfflineAudio && audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    } else if (playerRef.current && typeof playerRef.current.setVolume === 'function') {
       playerRef.current.setVolume(volume);
     }
-  }, [volume]);
+  }, [volume, useOfflineAudio]);
 
   // Update current time
   useEffect(() => {
@@ -155,6 +209,28 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
     return () => clearInterval(interval);
   }, [isPlaying]);
+
+  // Media Session API handlers for offline audio
+  useEffect(() => {
+    if (!useOfflineAudio || !audioRef.current) return;
+
+    const audio = audioRef.current;
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      audio.play();
+    });
+
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audio.pause();
+    });
+
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime) {
+        audio.currentTime = details.seekTime;
+        setCurrentTime(details.seekTime);
+      }
+    });
+  }, [useOfflineAudio]);
 
   // Media Session API for background playback and lock screen controls
   useEffect(() => {
@@ -235,19 +311,32 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   }, []);
 
   const togglePlay = () => {
-    if (!playerRef.current) return;
-
-    if (isPlaying) {
-      playerRef.current.pauseVideo();
-    } else {
-      playerRef.current.playVideo();
+    if (useOfflineAudio && audioRef.current) {
+      // Offline audio playback
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+    } else if (playerRef.current) {
+      // YouTube playback
+      if (isPlaying) {
+        playerRef.current.pauseVideo();
+      } else {
+        playerRef.current.playVideo();
+      }
     }
   };
 
   const handleSeek = (value: number[]) => {
-    if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
-      playerRef.current.seekTo(value[0], true);
-      setCurrentTime(value[0]);
+    const seekTime = value[0];
+    
+    if (useOfflineAudio && audioRef.current) {
+      audioRef.current.currentTime = seekTime;
+      setCurrentTime(seekTime);
+    } else if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+      playerRef.current.seekTo(seekTime, true);
+      setCurrentTime(seekTime);
     }
   };
 
@@ -270,7 +359,32 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   return (
     <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl">
       {/* Hidden YouTube player */}
-      <div ref={playerContainerRef} style={{ display: 'none' }} />
+      {!useOfflineAudio && <div ref={playerContainerRef} style={{ display: 'none' }} />}
+      
+      {/* Offline Audio Player */}
+      {useOfflineAudio && offlineAudioUrl && (
+        <>
+          <audio
+            ref={audioRef}
+            src={offlineAudioUrl}
+            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+            onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => {
+              setIsPlaying(false);
+              if (onNext) onNext();
+            }}
+            onLoadedMetadata={(e) => {
+              setDuration(e.currentTarget.duration);
+              if (e.currentTarget.paused) {
+                e.currentTarget.play().catch(err => console.error('Error playing offline audio:', err));
+              }
+            }}
+            style={{ display: 'none' }}
+          />
+        </>
+      )}
       
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-4">

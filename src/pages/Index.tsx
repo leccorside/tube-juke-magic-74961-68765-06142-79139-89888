@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Loader2, Heart, LogOut, ListMusic } from "lucide-react";
+import { Music2, Loader2, Heart, LogOut, ListMusic, Download } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
@@ -247,6 +247,15 @@ const Index = () => {
               >
                 <Heart className="w-4 h-4" />
                 {!isMobile && <span className="ml-2">Favoritos</span>}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/offline")}
+                size={isMobile ? "sm" : "default"}
+                className="flex-1 md:flex-none"
+              >
+                <Download className="w-4 h-4" />
+                {!isMobile && <span className="ml-2">Offline</span>}
               </Button>
               <Button
                 variant="ghost"
