@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon-192x192.png', 'icon-512x512.png'],
       manifest: {
-        name: 'Music Platform',
-        short_name: 'Music',
+        name: 'Leccor Music',
+        short_name: 'Leccor',
         description: 'Busque e ouça suas músicas favoritas do YouTube gratuitamente',
         theme_color: '#1a0a2e',
         background_color: '#1a0a2e',
