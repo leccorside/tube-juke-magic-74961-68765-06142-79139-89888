@@ -78,16 +78,25 @@ export const MusicCard = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('get-audio-stream', {
-        body: { youtubeId }
-      });
+      // Use download-audio function which proxies the audio stream
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-audio`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ youtubeId })
+        }
+      );
 
-      if (response.error) throw response.error;
-      
-      const { audioUrl } = response.data;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to download audio');
+      }
 
-      const audioResponse = await fetch(audioUrl);
-      if (!audioResponse.ok) throw new Error('Failed to download audio');
+      const audioResponse = response;
 
       const reader = audioResponse.body?.getReader();
       const contentLength = parseInt(audioResponse.headers.get('content-length') || '0');
