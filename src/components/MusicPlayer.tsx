@@ -73,7 +73,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         }
       }
 
-      // If not offline, use edge function proxy URL
+      // If not offline, get audio URL from edge function
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
@@ -82,26 +82,24 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           return;
         }
 
-        // Create a URL to the edge function that will stream the audio
-        const streamUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-audio-stream`;
-        
-        // Create a blob URL from the streamed response
-        const response = await fetch(streamUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ youtubeId: currentSong.youtube_id }),
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-audio-stream`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ youtubeId: currentSong.youtube_id }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error('Failed to get audio stream');
         }
 
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
+        const { audioUrl } = await response.json();
+        setAudioUrl(audioUrl);
       } catch (error) {
         console.error('Error loading audio:', error);
       } finally {

@@ -121,31 +121,17 @@ serve(async (req) => {
       throw new Error('youtubeId is required');
     }
 
-    console.log('Streaming audio for:', youtubeId);
+    console.log('Getting audio URL for:', youtubeId);
 
     const audioUrl = await getAudioStreamUrl(youtubeId);
     
-    // Fetch the audio and stream it back with minimal headers
-    const audioResponse = await fetch(audioUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    // Return the URL directly to the client - let the browser handle the request
+    return new Response(
+      JSON.stringify({ audioUrl }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    });
-
-    if (!audioResponse.ok) {
-      throw new Error(`Failed to fetch audio: ${audioResponse.status}`);
-    }
-
-    // Stream the audio directly to the client
-    return new Response(audioResponse.body, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': audioResponse.headers.get('content-type') || 'audio/webm',
-        'Content-Length': audioResponse.headers.get('content-length') || '',
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=3600'
-      }
-    });
+    );
   } catch (error) {
     console.error('Error in get-audio-stream:', error);
     return new Response(

@@ -118,32 +118,18 @@ serve(async (req) => {
       throw new Error('youtubeId is required');
     }
 
-    console.log('Downloading audio for:', youtubeId);
+    console.log('Getting download URL for:', youtubeId);
 
-    // Get audio stream URL
+    // Get audio stream URL and return it directly
     const { url: audioUrl, mimeType } = await getAudioStreamUrl(youtubeId);
 
-    // Fetch the audio file with minimal headers to avoid detection
-    const audioResponse = await fetch(audioUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      redirect: 'follow'
-    });
-
-    if (!audioResponse.ok) {
-      console.error(`Audio fetch failed with status ${audioResponse.status}: ${audioResponse.statusText}`);
-      throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}`);
-    }
-
-    // Stream the audio directly to the client
-    const headers = {
-      ...corsHeaders,
-      'Content-Type': mimeType || 'audio/webm',
-      'Content-Length': audioResponse.headers.get('content-length') || '',
-    };
-
-    return new Response(audioResponse.body, { headers });
+    // Return the URL and mimeType to the client
+    return new Response(
+      JSON.stringify({ audioUrl, mimeType }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Error in download-audio:', error);
     return new Response(

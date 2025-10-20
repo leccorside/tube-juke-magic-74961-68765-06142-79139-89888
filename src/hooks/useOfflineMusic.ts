@@ -93,12 +93,11 @@ export const useOfflineMusic = () => {
     try {
       toast.loading('Preparando download...', { id: 'download-progress' });
 
-      // Get audio stream from edge function via proxy
+      // Get audio URL from edge function (not proxied, direct URL)
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // Use download-audio function which proxies the audio stream
-      const audioResponse = await fetch(
+      const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-audio`,
         {
           method: 'POST',
@@ -110,9 +109,18 @@ export const useOfflineMusic = () => {
         }
       );
 
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to get audio URL');
+      }
+
+      const { audioUrl } = await response.json();
+
+      // Fetch the audio directly from the URL
+      const audioResponse = await fetch(audioUrl);
+      
       if (!audioResponse.ok) {
-        const error = await audioResponse.json();
-        throw new Error(error.error || 'Failed to download audio');
+        throw new Error('Failed to download audio');
       }
 
       const reader = audioResponse.body?.getReader();
