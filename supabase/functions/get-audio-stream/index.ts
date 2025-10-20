@@ -126,10 +126,19 @@ serve(async (req) => {
     const audioUrl = await getAudioStreamUrl(youtubeId);
     console.log('Fetching audio from:', audioUrl);
     
-    // Fetch the audio and stream it back
+    // Fetch the audio and stream it back with proper browser headers
     const audioResponse = await fetch(audioUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',
+        'Range': 'bytes=0-',
+        'Referer': 'https://www.youtube.com/',
+        'Origin': 'https://www.youtube.com',
+        'Sec-Fetch-Dest': 'audio',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'cross-site',
       }
     });
 
