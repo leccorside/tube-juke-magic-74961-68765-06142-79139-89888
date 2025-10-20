@@ -62,7 +62,7 @@ export default function Install() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Music Platform
+            Leccor Music
           </h1>
           <Button variant="ghost" onClick={() => navigate("/")}>
             Voltar
@@ -79,7 +79,7 @@ export default function Install() {
                 <div>
                   <CardTitle>App Instalado com Sucesso! 🎉</CardTitle>
                   <CardDescription>
-                    O Music Platform está instalado no seu dispositivo
+                    O Leccor Music está instalado no seu dispositivo
                   </CardDescription>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function Install() {
           <>
             <div className="text-center mb-8">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Instale o Music Platform
+                Instale o Leccor Music
               </h2>
               <p className="text-lg text-muted-foreground">
                 Acesse suas músicas como um app nativo no seu dispositivo
@@ -186,7 +186,7 @@ export default function Install() {
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary min-w-[24px]">4.</span>
-                      <span>O ícone do Music Platform aparecerá na sua tela inicial! 🎉</span>
+                      <span>O ícone do Leccor Music aparecerá na sua tela inicial! 🎉</span>
                     </li>
                   </ol>
                 </CardContent>
@@ -220,7 +220,7 @@ export default function Install() {
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary min-w-[24px]">4.</span>
-                      <span>O ícone do Music Platform aparecerá na sua tela inicial! 🎉</span>
+                      <span>O ícone do Leccor Music aparecerá na sua tela inicial! 🎉</span>
                     </li>
                   </ol>
                 </CardContent>
@@ -250,7 +250,7 @@ export default function Install() {
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary min-w-[24px]">3.</span>
-                      <span>O Music Platform será aberto como um app separado</span>
+                      <span>O Leccor Music será aberto como um app separado</span>
                     </li>
                     <li className="flex gap-2">
                       <span className="font-bold text-primary min-w-[24px]">4.</span>

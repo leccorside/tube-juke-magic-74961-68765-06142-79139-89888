@@ -81,7 +81,7 @@ export const InstallPrompt = () => {
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground mb-1">
-              Instalar Music Platform
+              Instalar Leccor Music
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
               Acesse suas músicas direto da tela inicial como um app nativo

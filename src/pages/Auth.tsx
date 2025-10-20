@@ -57,7 +57,7 @@ const Auth = () => {
             <Music2 className="w-12 h-12 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Music Platform
+            Leccor Music
           </h1>
           <p className="text-muted-foreground mt-2">
             Faça login para continuar
