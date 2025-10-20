@@ -123,15 +123,26 @@ serve(async (req) => {
     // Get audio stream URL
     const { url: audioUrl, mimeType } = await getAudioStreamUrl(youtubeId);
 
-    // Fetch the audio file
+    // Fetch the audio file with comprehensive headers
     const audioResponse = await fetch(audioUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'audio/webm,audio/ogg,audio/*;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',
+        'Range': 'bytes=0-',
+        'Referer': `https://www.youtube.com/watch?v=${youtubeId}`,
+        'Origin': 'https://www.youtube.com',
+        'Sec-Fetch-Dest': 'audio',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'cross-site'
+      },
+      redirect: 'follow'
     });
 
     if (!audioResponse.ok) {
-      throw new Error(`Failed to fetch audio: ${audioResponse.status}`);
+      console.error(`Audio fetch failed with status ${audioResponse.status}: ${audioResponse.statusText}`);
+      throw new Error(`Failed to fetch audio: ${audioResponse.status} ${audioResponse.statusText}`);
     }
 
     // Stream the audio directly to the client
