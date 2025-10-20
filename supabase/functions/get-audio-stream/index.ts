@@ -26,15 +26,29 @@ interface AudioFormat {
 async function getAudioStreamUrl(youtubeId: string): Promise<string> {
   console.log('Fetching audio stream URL for:', youtubeId);
   
+  const errors: string[] = [];
+  
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
+      console.log(`Trying instance: ${instance}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
       const response = await fetch(`${instance}/api/v1/videos/${youtubeId}`, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
+        },
+        signal: controller.signal
       });
 
-      if (!response.ok) continue;
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorMsg = `${instance} returned status: ${response.status}`;
+        console.log(errorMsg);
+        errors.push(errorMsg);
+        continue;
+      }
 
       const data = await response.json();
       
@@ -49,22 +63,32 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
         })) || [];
 
       if (audioFormats.length === 0) {
-        console.log(`No audio formats found on ${instance}`);
+        const errorMsg = `No audio formats found on ${instance}`;
+        console.log(errorMsg);
+        errors.push(errorMsg);
         continue;
       }
 
       // Sort by bitrate (higher is better)
       audioFormats.sort((a, b) => b.bitrate - a.bitrate);
       
-      console.log(`Found audio stream on ${instance}:`, audioFormats[0]);
+      console.log(`✅ Success with ${instance}, found audio format:`, {
+        mimeType: audioFormats[0].mimeType,
+        quality: audioFormats[0].quality,
+        bitrate: audioFormats[0].bitrate
+      });
+      
       return audioFormats[0].url;
     } catch (error) {
-      console.error(`Error with instance ${instance}:`, error);
+      const errorMsg = `${instance} error: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(errorMsg);
+      errors.push(errorMsg);
       continue;
     }
   }
 
-  throw new Error('Could not fetch audio stream from any Invidious instance');
+  console.error('All instances failed:', errors);
+  throw new Error(`Could not fetch audio stream. Tried ${INVIDIOUS_INSTANCES.length} instances. Errors: ${errors.join('; ')}`);
 }
 
 serve(async (req) => {
@@ -108,7 +132,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in get-audio-stream:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
