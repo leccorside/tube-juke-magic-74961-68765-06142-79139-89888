@@ -123,67 +123,76 @@ export const MusicCard = ({
           </div>
         )}
         
-        <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? 'flex-wrap gap-1 p-2' : 'gap-2'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           {/* Search variant: only download button */}
           {variant === "search" && onDownload && !isDownloading && (
-            <Button
-              size="icon"
-              onClick={onDownload}
-              className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
-            >
-              <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
-            </Button>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Button
+                size="icon"
+                onClick={onDownload}
+                className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
+              >
+                <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} />
+              </Button>
+            </div>
           )}
           
-          {/* Library variant: play, favorite, playlist, and delete buttons */}
+          {/* Library variant: play center, other buttons right */}
           {variant === "library" && (
             <>
+              {/* Play button centered */}
               {onPlay && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Button
+                    size="icon"
+                    onClick={onPlay}
+                    className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
+                  >
+                    <Play className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} fill-current`} />
+                  </Button>
+                </div>
+              )}
+              
+              {/* Other buttons on the right vertically */}
+              <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex flex-col ${isMobile ? 'gap-1' : 'gap-2'}`}>
                 <Button
                   size="icon"
-                  onClick={onPlay}
-                  className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
+                  onClick={() => setIsPlaylistDialogOpen(true)}
+                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <Play className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} fill-current`} />
+                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                 </Button>
-              )}
-              <Button
-                size="icon"
-                onClick={() => setIsPlaylistDialogOpen(true)}
-                className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
-              >
-                <ListPlus className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
-              </Button>
-              {onToggleFavorite && (
-                <Button
-                  size="icon"
-                  onClick={onToggleFavorite}
-                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
-                >
-                  <Heart className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} ${isFavorite ? "fill-current" : ""}`} />
-                </Button>
-              )}
-              <Button
-                size="icon"
-                onClick={isOfflineAvailable ? handleRemoveOffline : handleOfflineDownload}
-                className={`${isOfflineAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-accent hover:bg-accent/90'} text-white rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
-              >
-                {isOfflineAvailable ? (
-                  <Check className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
-                ) : (
-                  <Download className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
+                {onToggleFavorite && (
+                  <Button
+                    size="icon"
+                    onClick={onToggleFavorite}
+                    className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                  >
+                    <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
+                  </Button>
                 )}
-              </Button>
-              {onDelete && (
                 <Button
                   size="icon"
-                  onClick={onDelete}
-                  variant="destructive"
-                  className={`rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
+                  onClick={isOfflineAvailable ? handleRemoveOffline : handleOfflineDownload}
+                  className={`${isOfflineAvailable ? 'bg-green-600 hover:bg-green-700' : 'bg-accent hover:bg-accent/90'} text-white rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <Trash2 className={isMobile ? 'w-4 h-4' : 'w-6 h-6'} />
+                  {isOfflineAvailable ? (
+                    <Check className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  ) : (
+                    <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  )}
                 </Button>
-              )}
+                {onDelete && (
+                  <Button
+                    size="icon"
+                    onClick={onDelete}
+                    variant="destructive"
+                    className={`rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                  >
+                    <Trash2 className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </div>
