@@ -220,13 +220,13 @@ export default function Playlists() {
                     <Music className="w-8 h-8 text-primary" />
                   </div>
                   <div className="flex gap-2">
-                    {/* Botão de Compartilhar */}
+                    {/* Botão de Compartilhar (Sempre visível) */}
                     <SharePopover playlistId={playlist.id} />
                     
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      // Removendo classes de hover para manter visível
                       onClick={(e) => {
                         e.stopPropagation();
                         playPlaylist(playlist.id);
@@ -237,7 +237,7 @@ export default function Playlists() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      // Removendo classes de hover para manter visível
                       onClick={(e) => {
                         e.stopPropagation();
                         deletePlaylist(playlist.id);
