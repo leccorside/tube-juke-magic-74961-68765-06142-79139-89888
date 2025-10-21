@@ -134,14 +134,22 @@ export const useOfflineMusic = () => {
     const downloadToastId = toast.loading(`Preparando download de ${song.title}...`);
 
     try {
-      // 1. Chamar Edge Function para obter o URL de áudio direto
+      // 1. Obter o token de sessão mais recente
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Usuário não autenticado. Faça login novamente.");
+      }
+      
+      // 2. Chamar Edge Function para obter o URL de áudio direto, passando o token explicitamente
+      // Embora o invoke deva fazer isso, passamos o headers para garantir.
       const { data: audioData, error: audioError } = await supabase.functions.invoke("search-and-download", {
         body: { action: "get_audio_url", videoId: song.youtube_id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
       
       if (audioError) {
-        // Se houver um erro de rede ou status não-2xx, o objeto error do invoke é preenchido.
-        // Tentamos extrair a mensagem de erro do corpo da resposta, se possível.
         const errorMessage = audioError.message.includes('non-2xx status code') 
           ? 'Falha na comunicação com o servidor. Verifique se você está logado.'
           : audioError.message;
@@ -156,14 +164,14 @@ export const useOfflineMusic = () => {
       
       toast.loading(`Baixando ${song.title}...`, { id: downloadToastId });
 
-      // 2. Fazer o fetch do áudio real
+      // 3. Fazer o fetch do áudio real
       const response = await fetch(directAudioUrl);
       
       if (!response.ok) {
         throw new Error(`Falha ao buscar áudio: ${response.statusText}. O link de áudio pode ter expirado.`);
       }
       
-      // 3. Criar URL de cache com metadados
+      // 4. Criar URL de cache com metadados
       const metadata = {
         id: song.id,
         title: song.title,
@@ -176,13 +184,13 @@ export const useOfflineMusic = () => {
       // Usamos um URL de cache único que contém os metadados
       const cacheUrl = `/offline-audio-cache/${song.id}?metadata=${encodeURIComponent(JSON.stringify(metadata))}`;
 
-      // 4. Armazenar no Cache API
+      // 5. Armazenar no Cache API
       const cache = await caches.open(CACHE_NAME);
       
       // Clonamos a resposta para poder usá-la no cache
       await cache.put(cacheUrl, response.clone());
 
-      // 5. Atualizar o tamanho do cache (se Content-Length estiver disponível)
+      // 6. Atualizar o tamanho do cache (se Content-Length estiver disponível)
       const size = response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0;
       
       toast.success(`${song.title} baixada para offline! (${size > 0 ? formatBytes(size) : 'Tamanho desconhecido'})`, { id: downloadToastId });
