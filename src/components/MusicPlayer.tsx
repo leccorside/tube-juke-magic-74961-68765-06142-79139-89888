@@ -155,7 +155,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
         <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
-      <div className="flex items-center z-10">
+      <div className="flex items-center z-30"> {/* Z-INDEX AUMENTADO */}
         <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onPrevious)}>
           <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
@@ -207,8 +207,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
       <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden animate-in slide-in-from-bottom duration-300">
         
-        {/* 1. Progress Bar (Full Width at Top) - Ajustando padding vertical para ser menor */}
-        <div className="w-full h-2 px-4 pt-1 pb-1 md:px-6 md:pt-1 md:pb-1 relative z-20">
+        {/* 1. Progress Bar (Full Width at Top) - Removendo z-index explícito, confiando na ordem do DOM */}
+        <div className="w-full h-2 px-4 pt-1 pb-1 md:px-6 md:pt-1 md:pb-1 relative">
           <PlayerProgress
             currentTime={currentTime}
             duration={duration}
@@ -217,10 +217,10 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           />
         </div>
         
-        {/* Botão de Fechar (X) - Ajustando posição para o novo layout */}
-        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 right-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
+        {/* Botão de Fechar (X) - Mantendo z-index alto */}
+        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 right-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-30"><X className="w-4 h-4" /></Button>
         
-        {/* Conteúdo principal do Mini-Player - Aumentando o padding vertical para separar do progress bar */}
+        {/* Conteúdo principal do Mini-Player */}
         <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             
@@ -239,12 +239,11 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             {/* Controls (Middle section) */}
             <div className="flex flex-col items-center gap-4 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
               
-              {/* Control Buttons */}
-              <div className="flex items-center gap-2 z-10">
+              {/* Control Buttons - Z-INDEX APLICADO AQUI */}
+              <div className="flex items-center gap-2 z-30">
                 <PlayerControls />
               </div>
               
-              {/* Removida a barra de progresso daqui */}
             </div>
 
             {/* Volume (Desktop only) */}
