@@ -221,7 +221,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <img
               src={currentSong.thumbnail_url || "/placeholder.svg"}
               alt={currentSong.title}
-              className="w-14 h-14 rounded-lg object-cover shadow-lg"
+              className="w-14 h-14 rounded-full object-cover shadow-lg"
             />
             <div className="min-w-0">
               <h4 className="font-semibold text-foreground truncate">{currentSong.title}</h4>
