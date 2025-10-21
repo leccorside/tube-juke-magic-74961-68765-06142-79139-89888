@@ -121,7 +121,8 @@ export const MusicCard = ({
           {/* Search variant: download and queue buttons */}
           {variant === "search" && (
             <div className="absolute inset-0 flex items-center justify-center gap-4">
-              {onDownload && !isDownloading && (
+              {/* Botão de Download Oculto */}
+              {/* {onDownload && !isDownloading && (
                 <Button
                   size="icon"
                   onClick={onDownload}
@@ -129,13 +130,13 @@ export const MusicCard = ({
                 >
                   <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> 
                 </Button>
-              )}
+              )} */}
               <Button
                 size="icon"
                 onClick={handleAddToQueue}
                 className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
               >
-                <ListMusic className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> {/* Alterado para ListMusic */}
+                <ListMusic className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
               </Button>
             </div>
           )}
@@ -165,11 +166,11 @@ export const MusicCard = ({
                   onClick={handleAddToQueue}
                   className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> {/* Alterado para ListMusic */}
+                  <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                 </Button>
                 
-                {/* Offline Toggle Button */}
-                <Button
+                {/* Offline Toggle Button (Download Oculto) */}
+                {/* <Button
                   size="icon"
                   onClick={handleToggleOffline}
                   className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
@@ -182,7 +183,7 @@ export const MusicCard = ({
                   ) : (
                     <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                   )}
-                </Button>
+                </Button> */}
 
                 {/* Add to Playlist Dialog Button */}
                 <Button
@@ -190,7 +191,7 @@ export const MusicCard = ({
                   onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
                   className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> {/* Mantido ListPlus */}
+                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                 </Button>
                 {onToggleFavorite && (
                   <Button
