@@ -10,6 +10,7 @@ import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PlayerProgress } from "./PlayerProgress"; // Importando o novo componente
 // import VisualizerBars from "./VisualizerBars"; // Removido
 
 const YT_PLAYING = 1;
@@ -138,12 +139,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     if (!isOfflineMode && youtubePlayerRef.current) youtubePlayerRef.current.setVolume(newVolume);
   };
 
-  const formatTime = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   // Função auxiliar para lidar com ações internas e impedir a propagação
   const handleAction = (e: React.MouseEvent, action?: () => void) => {
     e.stopPropagation();
@@ -232,7 +227,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             </div>
 
             {/* Controls & Progress (Middle section) */}
-            {/* Aumentando o gap vertical de gap-1 para gap-4 no mobile */}
             <div className="flex flex-col items-center gap-4 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
               
               {/* Control Buttons */}
@@ -240,24 +234,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 <PlayerControls />
               </div>
 
-              {/* Progress Bar */}
-              <div className="flex items-center gap-2 w-full max-w-md">
-                <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
-                  {formatTime(currentTime)}
-                </span>
-                <Slider
-                  value={[currentTime]}
-                  max={duration || 100}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="flex-1"
-                  disabled={!isPlayerReady}
-                  onMouseDown={(e) => e.stopPropagation()}
-                />
-                <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
-                  {formatTime(duration)}
-                </span>
-              </div>
+              {/* Progress Bar (Usando o novo componente) */}
+              <PlayerProgress
+                currentTime={currentTime}
+                duration={duration}
+                isPlayerReady={isPlayerReady}
+                handleSeek={handleSeek}
+              />
             </div>
 
             {/* Volume (Desktop only) */}
