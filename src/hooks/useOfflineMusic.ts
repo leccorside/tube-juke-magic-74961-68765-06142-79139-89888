@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
+import { formatBytes } from "@/lib/utils";
 
 interface OfflineSong {
   id: string;
@@ -32,11 +33,10 @@ export const useOfflineMusic = () => {
       for (const request of keys) {
         const response = await cache.match(request);
         if (response) {
-          // Tentativa de extrair metadados do cabeçalho ou URL
           const url = new URL(request.url);
           const metadata = JSON.parse(url.searchParams.get('metadata') || '{}');
           
-          // O Content-Length pode não estar disponível se o recurso for de origem cruzada sem CORS adequado
+          // Tentativa de obter o tamanho real do arquivo cacheado
           const size = response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0;
           totalSize += size;
 
@@ -47,7 +47,7 @@ export const useOfflineMusic = () => {
               artist: metadata.artist || 'Artista Desconhecido',
               thumbnailUrl: metadata.thumbnailUrl || '/placeholder.svg',
               youtubeId: metadata.youtubeId,
-              audioUrl: metadata.audioUrl, // Este é o URL de áudio direto
+              audioUrl: metadata.audioUrl,
               audioSize: size,
             });
           }
@@ -148,10 +148,13 @@ export const useOfflineMusic = () => {
       toast.loading(`Baixando ${song.title}...`, { id: downloadToastId });
 
       // 2. Fazer o fetch do áudio real
+      // Usamos 'no-cors' para tentar contornar problemas de CORS, mas isso pode limitar o acesso a headers como Content-Length.
+      // No entanto, como estamos usando um URL de Invidious, o CORS pode ser um problema.
+      // Vamos tentar o modo padrão primeiro.
       const response = await fetch(directAudioUrl);
       
       if (!response.ok) {
-        throw new Error(`Falha ao buscar áudio: ${response.statusText}`);
+        throw new Error(`Falha ao buscar áudio: ${response.statusText}. Tente novamente.`);
       }
       
       // 3. Criar URL de cache com metadados
@@ -173,7 +176,10 @@ export const useOfflineMusic = () => {
       // Clonamos a resposta para poder usá-la no cache
       await cache.put(cacheUrl, response.clone());
 
-      toast.success(`${song.title} baixada para offline!`, { id: downloadToastId });
+      // 5. Atualizar o tamanho do cache (se Content-Length estiver disponível)
+      const size = response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0;
+      
+      toast.success(`${song.title} baixada para offline! (${size > 0 ? formatBytes(size) : 'Tamanho desconhecido'})`, { id: downloadToastId });
       refreshOfflineSongs();
       return true;
     } catch (error) {

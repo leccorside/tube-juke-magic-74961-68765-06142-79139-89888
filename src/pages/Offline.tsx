@@ -6,7 +6,7 @@ import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MusicCard } from "@/components/MusicCard";
-import { formatBytes } from "@/lib/utils"; // Precisamos criar esta função utilitária
+import { formatBytes } from "@/lib/utils";
 
 const Offline = () => {
   const navigate = useNavigate();
@@ -21,13 +21,6 @@ const Offline = () => {
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
 
   const handlePlayOffline = async (song: any) => {
-    // Para reprodução offline, precisamos garantir que o player use o URL do cache
-    // No entanto, como o player principal usa o YouTubePlayer (iframe),
-    // a reprodução offline real exigiria um player de áudio HTML5 separado.
-    
-    // Por enquanto, vamos apenas definir a playlist e a música atual.
-    // O MusicPlayer.tsx precisará ser atualizado para lidar com URLs de cache.
-    
     // Criamos uma playlist temporária apenas com as músicas offline
     const playlist = offlineSongs.map(s => ({
       id: s.id,
@@ -121,20 +114,26 @@ const Offline = () => {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {offlineSongs.map((song) => (
-              <MusicCard
-                key={song.id}
-                id={song.id}
-                title={song.title}
-                artist={song.artist}
-                thumbnail={song.thumbnailUrl}
-                duration={0} // Duração desconhecida no cache
-                onPlay={() => handlePlayOffline(song)}
-                onDelete={() => handleRemoveOffline(song.id)}
-                variant="library"
-                isFavorite={true} // Apenas para fins de exibição, pode ser ajustado
-                youtubeId={song.youtubeId}
-                audioUrl={song.audioUrl}
-              />
+              <div key={song.id} className="relative">
+                <MusicCard
+                  id={song.id}
+                  title={song.title}
+                  artist={song.artist}
+                  thumbnail={song.thumbnailUrl}
+                  duration={0} // Duração desconhecida no cache
+                  onPlay={() => handlePlayOffline(song)}
+                  onDelete={() => handleRemoveOffline(song.id)}
+                  variant="library"
+                  isFavorite={true} // Apenas para fins de exibição, pode ser ajustado
+                  youtubeId={song.youtubeId}
+                  audioUrl={song.audioUrl}
+                />
+                {song.audioSize && song.audioSize > 0 && (
+                  <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/50 text-xs text-muted-foreground text-center rounded-b-lg">
+                    {formatBytes(song.audioSize)}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
