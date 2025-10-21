@@ -9,7 +9,6 @@ import { Plus, Music, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { SharePopover } from "@/components/SharePopover"; // Importando o SharePopover
 
 interface Playlist {
   id: string;
@@ -220,13 +219,10 @@ export default function Playlists() {
                     <Music className="w-8 h-8 text-primary" />
                   </div>
                   <div className="flex gap-2">
-                    {/* Botão de Compartilhar (Sempre visível) */}
-                    <SharePopover playlistId={playlist.id} />
                     
                     <Button
                       size="icon"
                       variant="ghost"
-                      // Removendo classes de hover para manter visível
                       onClick={(e) => {
                         e.stopPropagation();
                         playPlaylist(playlist.id);
@@ -237,7 +233,6 @@ export default function Playlists() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      // Removendo classes de hover para manter visível
                       onClick={(e) => {
                         e.stopPropagation();
                         deletePlaylist(playlist.id);

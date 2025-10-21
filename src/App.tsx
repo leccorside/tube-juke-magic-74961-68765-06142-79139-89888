@@ -15,7 +15,6 @@ import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import Offline from "./pages/Offline";
 import Install from "./pages/Install";
-import SharedPlaylist from "./pages/SharedPlaylist"; // Importando a nova página
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,9 +30,6 @@ const AppContent = () => {
     <Routes>
       <Route path="/auth" element={<AuthWrapper />} />
       <Route path="/install" element={<Install />} />
-      
-      {/* Rota de Compartilhamento (Acesso público) */}
-      <Route path="/share/playlist/:id" element={<SharedPlaylist />} />
       
       <Route
         path="/"
