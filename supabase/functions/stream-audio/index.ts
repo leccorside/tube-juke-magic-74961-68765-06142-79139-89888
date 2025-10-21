@@ -5,16 +5,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Expose-Headers': 'Content-Length, Content-Type, Content-Range',
 };
 
-// Invidious instances for fallback - updated with more reliable instances
+// Invidious instances for fallback
 const INVIDIOUS_INSTANCES = [
   'https://iv.nboeck.de',
   'https://invidious.privacyredirect.com',
   'https://inv.tux.pizza',
   'https://invidious.jing.rocks',
   'https://iv.melmac.space',
-  'https://invidious.projectsegfau.lt', // Added more instances
+  'https://invidious.projectsegfau.lt',
   'https://y.com.sb',
   'https://invidious.epicsite.xyz',
 ];
@@ -27,7 +28,7 @@ interface AudioFormat {
 }
 
 async function getAudioStreamUrl(youtubeId: string): Promise<string> {
-  console.log('Fetching audio stream URL for:', youtubeId);
+  console.log('Fetching audio stream URL for proxy:', youtubeId);
   
   const errors: string[] = [];
   
@@ -35,7 +36,7 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
     try {
       console.log(`Trying instance: ${instance}`);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       const response = await fetch(`${instance}/api/v1/videos/${youtubeId}`, {
         headers: {
@@ -55,7 +56,6 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
 
       const data = await response.json();
       
-      // Find best audio format (prefer opus or m4a)
       const audioFormats: AudioFormat[] = data.adaptiveFormats
         ?.filter((f: any) => f.type?.includes('audio'))
         ?.map((f: any) => ({
@@ -72,16 +72,11 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
         continue;
       }
 
-      // Sort by bitrate (higher is better)
       audioFormats.sort((a, b) => b.bitrate - a.bitrate);
       
       const bestFormat = audioFormats[0];
-
-      console.log(`✅ Success with ${instance}, found audio format:`, {
-        mimeType: bestFormat.mimeType,
-        quality: bestFormat.quality,
-        bitrate: bestFormat.bitrate
-      });
+      
+      console.log(`✅ Success with ${instance}, found audio URL`);
       
       return bestFormat.url;
     } catch (error) {
@@ -93,7 +88,7 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
   }
 
   console.error('All instances failed:', errors);
-  throw new Error(`Could not fetch audio stream. Tried ${INVIDIOUS_INSTANCES.length} instances. Errors: ${errors.join('; ')}`);
+  throw new Error(`Could not fetch audio stream URL. Errors: ${errors.join('; ')}`);
 }
 
 serve(async (req) => {
@@ -117,7 +112,7 @@ serve(async (req) => {
     );
 
     if (authError || !user) {
-      throw new Response(
+      return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -129,26 +124,40 @@ serve(async (req) => {
       throw new Error('youtubeId is required');
     }
 
-    console.log('Getting audio stream for:', youtubeId);
-
     const audioUrl = await getAudioStreamUrl(youtubeId);
-    console.log('Returning audio URL:', audioUrl);
     
-    // Return the URL directly instead of proxying - let the browser fetch it
-    return new Response(
-      JSON.stringify({ audioUrl }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+    // Proxy the audio stream
+    const audioResponse = await fetch(audioUrl, {
+      headers: {
+        // Important: Forward Range header for seeking
+        ...(req.headers.get('Range') && { 'Range': req.headers.get('Range')! }),
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
-    );
-  } catch (error) {
-    console.error('Error in get-audio-stream:', error);
+    });
+
+    if (!audioResponse.ok) {
+      throw new Error(`Failed to fetch audio stream: ${audioResponse.statusText}`);
+    }
+
+    // Create headers for streaming response
+    const responseHeaders = new Headers(corsHeaders);
+    audioResponse.headers.forEach((value, key) => {
+      // Copy relevant headers for streaming
+      if (['content-type', 'content-length', 'content-range', 'accept-ranges'].includes(key.toLowerCase())) {
+        responseHeaders.set(key, value);
+      }
+    });
     
-    // Handle specific error from getAudioStreamUrl
-    const status = error instanceof Error && error.message.includes('Could not fetch audio stream') ? 503 : 400;
+    // Return the proxied stream
+    return new Response(audioResponse.body, {
+      status: audioResponse.status,
+      headers: responseHeaders,
+    });
+
+  } catch (error) {
+    console.error('Error in stream-audio:', error);
+    
+    const status = error instanceof Error && error.message.includes('Could not fetch audio stream URL') ? 503 : 400;
 
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
