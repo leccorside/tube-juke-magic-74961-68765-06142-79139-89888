@@ -1,0 +1,2 @@
+// This file is intentionally left empty to prevent deployment errors due to Supabase infrastructure issues (Invalid project ref: null).
+// The functionality for streaming audio has been moved to the 'download-audio' Edge Function.
