@@ -207,8 +207,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
       <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden animate-in slide-in-from-bottom duration-300">
         
-        {/* 1. Progress Bar (Full Width at Top) */}
-        <div className="w-full h-2 px-4 pt-2 md:px-6 md:pt-3 relative z-20">
+        {/* 1. Progress Bar (Full Width at Top) - Ajustando padding vertical para ser menor */}
+        <div className="w-full h-2 px-4 pt-1 pb-1 md:px-6 md:pt-1 md:pb-1 relative z-20">
           <PlayerProgress
             currentTime={currentTime}
             duration={duration}
@@ -217,10 +217,10 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           />
         </div>
         
-        {/* Botão de Fechar (X) - Mantido para fechar o player */}
-        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
+        {/* Botão de Fechar (X) - Ajustando posição para o novo layout */}
+        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 right-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
         
-        {/* Conteúdo principal do Mini-Player */}
+        {/* Conteúdo principal do Mini-Player - Aumentando o padding vertical para separar do progress bar */}
         <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             
