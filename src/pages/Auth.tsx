@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { RegisterForm } from "@/components/RegisterForm";
 
 const Auth = () => {
@@ -16,12 +16,20 @@ const Auth = () => {
   const { signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const from = location.state?.from || "/";
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Redireciona para a rota original (ex: /share/playlist/...)
+      if (from !== "/auth") {
+        navigate(from, { replace: true, state: { redirectedFromAuth: true } });
+      } else {
+        navigate("/", { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, from]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
