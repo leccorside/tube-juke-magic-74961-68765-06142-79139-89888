@@ -200,7 +200,14 @@ export const useOfflineMusic = () => {
     } catch (error) {
       console.error('Download offline failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Falha ao baixar música para offline: ${errorMessage}`, { id: downloadToastId });
+      
+      // Mensagem de erro mais clara para o usuário
+      if (errorMessage.includes('A extração de link de áudio direto está temporariamente indisponível')) {
+        toast.error("Download offline indisponível: O YouTube bloqueou a extração do link de áudio. Estamos trabalhando em uma solução.", { id: downloadToastId });
+      } else {
+        toast.error(`Falha ao baixar música para offline: ${errorMessage}`, { id: downloadToastId });
+      }
+      
       return false;
     }
   };

@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import ytdl from 'https://esm.sh/ytdl-core@4.11.5'; // Usando ytdl-core para extração direta
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -78,26 +77,11 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
   }
 }
 
-// Function to get the direct audio URL for a video ID using ytdl-core
+// Function to get the direct audio URL for a video ID (Placeholder - always fails for now)
 async function getDirectAudioUrl(videoId: string): Promise<string> {
-  try {
-    const info = await ytdl.getInfo(videoId);
-    
-    // Filtra para encontrar o melhor formato de áudio (apenas áudio, sem vídeo)
-    const audioFormat = ytdl.chooseFormat(info.formats, { 
-      quality: 'highestaudio', 
-      filter: 'audioonly' 
-    });
-
-    if (audioFormat && audioFormat.url) {
-      return audioFormat.url;
-    }
-
-    throw new Error('Nenhum formato de áudio compatível encontrado.');
-  } catch (error) {
-    console.error('ytdl error:', error);
-    throw new Error('Falha ao extrair link de áudio direto do YouTube. O vídeo pode estar indisponível ou restrito.');
-  }
+  // Esta função está sendo removida pois a extração direta falhou consistentemente.
+  // Retornamos um erro claro para o cliente.
+  throw new Error('A extração de link de áudio direto está temporariamente indisponível devido a restrições do YouTube.');
 }
 
 
