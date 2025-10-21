@@ -55,12 +55,8 @@ const Index = () => {
     enabled: !!user,
   });
 
-  // Update playlist when songs change
-  useEffect(() => {
-    if (songs) {
-      setPlaylist(songs);
-    }
-  }, [songs, setPlaylist]);
+  // REMOVIDO: useEffect que sobrescrevia a playlist com todas as músicas da biblioteca.
+  // A playlist agora só é definida ao clicar em 'Play' em um card.
 
   // Fetch user's favorites
   const { data: favorites, refetch: refetchFavorites } = useQuery({
@@ -205,6 +201,10 @@ const Index = () => {
   };
 
   const handlePlay = (song: Song) => {
+    // Ao tocar uma música da biblioteca, a playlist é definida como a biblioteca inteira
+    if (songs) {
+      setPlaylist(songs);
+    }
     setCurrentSong(song);
   };
 
