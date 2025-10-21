@@ -153,10 +153,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
   // Função para abrir a tela cheia, garantindo que não seja acionada por controles internos
   const handleOpenFullScreen = (e: React.MouseEvent) => {
-    // Verifica se o clique não foi interrompido por um controle interno
-    // Nota: Em React, e.stopPropagation() é suficiente para a maioria dos casos,
-    // mas para garantir que o clique no Popover/Slider não suba,
-    // garantimos que todos os controles internos chamem e.stopPropagation().
     setIsFullScreen(true);
   };
 
@@ -188,8 +184,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       ) : (
         <Popover>
           <PopoverTrigger asChild>
-            {/* Adicionado e.stopPropagation() no onClick do PopoverTrigger para mobile */}
-            <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => handleAction(e)}>
+            {/* CORREÇÃO: Usar e.stopPropagation() diretamente no onClick do botão para permitir que o Popover funcione, mas impeça a abertura da tela cheia. */}
+            <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
               <Volume2 className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
@@ -202,7 +198,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 step={1} 
                 onValueChange={handleVolumeChange} 
                 className="flex-1" 
-                // Adicionado e.stopPropagation() no onMouseDown para prevenir clique no Card
+                // Parar propagação para prevenir clique no Card (embora o Popover já ajude)
                 onMouseDown={(e) => e.stopPropagation()}
               />
             </div>
