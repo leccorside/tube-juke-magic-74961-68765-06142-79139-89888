@@ -8,8 +8,9 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
-import { useMusicPlayer } from "@/contexts/MusicPlayerContext"; // Importando useMusicPlayer
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Importando Popover
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import VisualizerBars from "./VisualizerBars"; // Importando o novo componente
 
 // YouTube Player States
 const YT_PLAYING = 1;
@@ -234,7 +235,10 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50">
+    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50 relative overflow-hidden">
+      
+      {/* Equalizer Visualizer (Background) */}
+      <VisualizerBars isPlaying={isPlaying} />
       
       {/* Player Components */}
       {isOfflineMode && offlinePlaybackUrl ? (
@@ -271,7 +275,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <X className="w-4 h-4" />
       </Button>
 
-      <div className="container mx-auto px-4 py-3 md:py-4">
+      <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
         
         {/* Mobile Layout: Song Info (Top) + Controls (Middle) + Progress (Bottom) */}
         <div className="flex flex-col md:flex-row md:items-center md:gap-4">
