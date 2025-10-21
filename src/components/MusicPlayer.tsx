@@ -155,7 +155,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
         <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
-      <div className="flex items-center">
+      <div className="flex items-center z-10"> {/* Adicionando z-10 aqui */}
         <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onPrevious)}>
           <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
@@ -230,7 +230,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <div className="flex flex-col items-center gap-4 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
               
               {/* Control Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 z-10"> {/* Adicionando z-10 aqui */}
                 <PlayerControls />
               </div>
 
