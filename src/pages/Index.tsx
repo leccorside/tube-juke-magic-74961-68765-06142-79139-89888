@@ -314,6 +314,7 @@ const Index = () => {
                   isFavorite={favorites?.includes(song.id)}
                   variant="library"
                   youtubeId={song.youtube_id}
+                  audioUrl={song.audio_url} // Passando audioUrl
                 />
               ))}
             </div>

@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { YouTubePlayer } from "./YouTubePlayer";
 import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
+import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
+import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 
 // YouTube Player States
 const YT_PLAYING = 1;
@@ -15,10 +17,11 @@ const YT_BUFFERING = 3;
 
 interface MusicPlayerProps {
   currentSong: {
+    id: string; // Adicionado ID para verificação offline
     title: string;
     artist: string;
     thumbnail_url: string;
-    audio_url: string; // This is the YouTube URL
+    audio_url: string; // This is the YouTube URL or Cache URL
     youtube_id: string;
     duration?: number;
   } | null;
@@ -27,29 +30,43 @@ interface MusicPlayerProps {
   onClose?: () => void;
 }
 
+// Ref para o elemento de áudio HTML5 (usado pelo OfflineAudioPlayer)
+const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
 
 export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
-  const playerRef = useRef<YouTubePlayerType | null>(null);
+  const youtubePlayerRef = useRef<YouTubePlayerType | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  const { isOnline, isAvailableOffline, getOfflineAudioUrl } = useOfflineMusic();
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [offlinePlaybackUrl, setOfflinePlaybackUrl] = useState<string | null>(null);
 
-  // Monitor online/offline status
+  // Check if the current song is available offline
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+    const checkOfflineStatus = async () => {
+      if (currentSong) {
+        const isCached = await isAvailableOffline(currentSong.id);
+        
+        // Se estiver offline E estiver em cache, ative o modo offline
+        if (!isOnline && isCached) {
+          const url = await getOfflineAudioUrl(currentSong.id);
+          if (url) {
+            setOfflinePlaybackUrl(url);
+            setIsOfflineMode(true);
+            return;
+          }
+        }
+      }
+      setIsOfflineMode(false);
+      setOfflinePlaybackUrl(null);
     };
-  }, []);
+    checkOfflineStatus();
+  }, [currentSong?.id, isOnline, isAvailableOffline, getOfflineAudioUrl]);
+
 
   // Reset state when song changes
   useEffect(() => {
@@ -59,17 +76,18 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       setDuration(currentSong.duration || 0);
       setIsPlaying(false);
       
-      if (!isOnline) {
+      if (!isOnline && !isOfflineMode) {
         toast.error("Você está offline. A reprodução de músicas do YouTube requer conexão.");
         setIsLoadingAudio(false);
       }
     }
-  }, [currentSong?.youtube_id, currentSong?.duration, isOnline]);
+  }, [currentSong?.youtube_id, currentSong?.duration, isOnline, isOfflineMode]);
 
-  // Media Session API for background playback and lock screen controls
+  // Media Session API setup (updated to handle both modes)
   useEffect(() => {
     if (!currentSong || typeof navigator.mediaSession === 'undefined') return;
 
+    // ... (MediaMetadata setup remains the same) ...
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentSong.title,
       artist: currentSong.artist,
@@ -83,13 +101,24 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       ],
     });
 
-    navigator.mediaSession.setActionHandler('play', () => {
-      playerRef.current?.playVideo();
-    });
+    const playHandler = () => {
+      if (isOfflineMode) {
+        setIsPlaying(true);
+      } else {
+        youtubePlayerRef.current?.playVideo();
+      }
+    };
 
-    navigator.mediaSession.setActionHandler('pause', () => {
-      playerRef.current?.pauseVideo();
-    });
+    const pauseHandler = () => {
+      if (isOfflineMode) {
+        setIsPlaying(false);
+      } else {
+        youtubePlayerRef.current?.pauseVideo();
+      }
+    };
+
+    navigator.mediaSession.setActionHandler('play', playHandler);
+    navigator.mediaSession.setActionHandler('pause', pauseHandler);
 
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       if (onPrevious) onPrevious();
@@ -101,8 +130,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
     navigator.mediaSession.setActionHandler('seekto', (details) => {
       if (details.seekTime) {
-        playerRef.current?.seekTo(details.seekTime, true);
-        setCurrentTime(details.seekTime);
+        handleSeek([details.seekTime]);
       }
     });
 
@@ -116,7 +144,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         navigator.mediaSession.setActionHandler('seekto', null);
       }
     };
-  }, [currentSong, onNext, onPrevious]);
+  }, [currentSong, onNext, onPrevious, isOfflineMode]);
 
   // Update playback state for Media Session
   useEffect(() => {
@@ -126,9 +154,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   }, [isPlaying]);
 
   const handlePlayerReady = (player: YouTubePlayerType) => {
-    playerRef.current = player;
+    youtubePlayerRef.current = player;
     setIsLoadingAudio(false);
-    // Autoplay should start here if allowed by browser
   };
 
   const handleStateChange = (state: number) => {
@@ -148,35 +175,39 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         setIsLoadingAudio(true);
         break;
       default:
-        // Other states like unstarted (-1) or cued (5)
         break;
     }
   };
 
   const togglePlay = () => {
-    if (!playerRef.current) return;
-
-    if (isPlaying) {
-      playerRef.current.pauseVideo();
-    } else {
-      playerRef.current.playVideo();
+    if (isOfflineMode) {
+      setIsPlaying(!isPlaying);
+    } else if (youtubePlayerRef.current) {
+      if (isPlaying) {
+        youtubePlayerRef.current.pauseVideo();
+      } else {
+        youtubePlayerRef.current.playVideo();
+      }
     }
   };
 
   const handleSeek = (value: number[]) => {
     const seekTime = value[0];
-    if (playerRef.current) {
-      playerRef.current.seekTo(seekTime, true);
-      setCurrentTime(seekTime);
+    if (isOfflineMode && offlineAudioRef.current) {
+      offlineAudioRef.current.currentTime = seekTime;
+    } else if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.seekTo(seekTime, true);
     }
+    setCurrentTime(seekTime);
   };
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
     setVolume(newVolume);
-    if (playerRef.current) {
-      playerRef.current.setVolume(newVolume);
+    if (!isOfflineMode && youtubePlayerRef.current) {
+      youtubePlayerRef.current.setVolume(newVolume);
     }
+    // OfflineAudioPlayer handles volume via props
   };
 
   const formatTime = (time: number) => {
@@ -187,13 +218,27 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
   if (!currentSong) return null;
 
-  const isPlayerReady = !!playerRef.current && !isLoadingAudio;
+  const isPlayerReady = !isLoadingAudio;
+  const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
   return (
     <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50">
       
-      {/* YouTube Player Component (Hidden) */}
-      {currentSong.youtube_id && isOnline && (
+      {/* Player Components */}
+      {isOfflineMode && offlinePlaybackUrl ? (
+        <OfflineAudioPlayer
+          audioUrl={offlinePlaybackUrl}
+          onTimeUpdate={setCurrentTime}
+          onDurationChange={setDuration}
+          onPlayStateChange={setIsPlaying}
+          onEnded={onNext || (() => {})}
+          volume={volume}
+          isPlaying={isPlaying} 
+          onLoadingChange={setIsLoadingAudio}
+          // Passando o ref para o elemento de áudio HTML5
+          ref={offlineAudioRef} 
+        />
+      ) : currentSong.youtube_id && isOnline && (
         <YouTubePlayer
           videoId={currentSong.youtube_id}
           onReady={handlePlayerReady}
@@ -225,7 +270,10 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             />
             <div className="min-w-0">
               <h4 className="font-semibold text-foreground truncate">{currentSong.title}</h4>
-              <p className="text-sm text-muted-foreground truncate">{currentSong.artist}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {currentSong.artist} 
+                {isOfflineMode && <span className="ml-2 text-primary/80">(Offline)</span>}
+              </p>
             </div>
           </div>
 
@@ -245,9 +293,9 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 size="icon"
                 onClick={togglePlay}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10"
-                disabled={!isPlayerReady || !isOnline}
+                disabled={isPlaybackDisabled}
               >
-                {isLoadingAudio || !isOnline ? (
+                {isLoadingAudio || isPlaybackDisabled ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : isPlaying ? (
                   <Pause className="w-5 h-5" />

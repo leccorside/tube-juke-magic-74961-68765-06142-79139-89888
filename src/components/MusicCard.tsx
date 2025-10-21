@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Play, Trash2, Heart, ListPlus, Download } from "lucide-react";
+import { Play, Trash2, Heart, ListPlus, Download, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 
 interface MusicCardProps {
   id: string;
@@ -19,6 +20,7 @@ interface MusicCardProps {
   onToggleFavorite?: () => void;
   variant?: "search" | "library";
   youtubeId?: string;
+  audioUrl?: string; // Adicionado para download offline
 }
 
 export const MusicCard = ({
@@ -34,11 +36,46 @@ export const MusicCard = ({
   isFavorite,
   onToggleFavorite,
   variant = "library",
+  audioUrl,
+  youtubeId,
 }: MusicCardProps) => {
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [isDownloadingOffline, setIsDownloadingOffline] = useState(false);
+  const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Removed all offline related state and effects (isOfflineAvailable, downloadProgress, isDownloadingOffline)
+  const { downloadForOffline, removeOffline, isAvailableOffline, isOnline } = useOfflineMusic();
+
+  useEffect(() => {
+    if (variant === 'library') {
+      isAvailableOffline(id).then(setIsOfflineAvailable);
+    }
+  }, [id, variant, isAvailableOffline]);
+
+  const handleToggleOffline = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isOfflineAvailable) {
+      await removeOffline(id);
+      setIsOfflineAvailable(false);
+    } else {
+      if (!isOnline) {
+        // O hook já mostra o toast, mas garantimos que não tentamos
+        return;
+      }
+      setIsDownloadingOffline(true);
+      const success = await downloadForOffline({
+        id,
+        title,
+        artist,
+        thumbnail_url: thumbnail,
+        audio_url: audioUrl || '',
+        youtube_id: youtubeId || '',
+      });
+      setIsDownloadingOffline(false);
+      if (success) {
+        setIsOfflineAvailable(true);
+      }
+    }
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -57,10 +94,9 @@ export const MusicCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Download progress indicator (only for library download) */}
-        {isDownloading && (
+        {(isDownloading || isDownloadingOffline) && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center">
-            {/* Loader2 component is not imported, but we keep the logic for library download */}
-            <div className="w-8 h-8 text-primary animate-spin mb-2" /> 
+            <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" /> 
             <span className="text-sm text-white">Baixando...</span>
           </div>
         )}
@@ -97,9 +133,26 @@ export const MusicCard = ({
               
               {/* Other buttons on the right vertically */}
               <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex flex-col ${isMobile ? 'gap-1' : 'gap-2'}`}>
+                
+                {/* Offline Toggle Button */}
                 <Button
                   size="icon"
-                  onClick={() => setIsPlaylistDialogOpen(true)}
+                  onClick={handleToggleOffline}
+                  className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                  disabled={isDownloadingOffline}
+                >
+                  {isDownloadingOffline ? (
+                    <Loader2 className={isMobile ? 'w-4 h-4 animate-spin' : 'w-5 h-5 animate-spin'} />
+                  ) : isOfflineAvailable ? (
+                    <CheckCircle2 className={isMobile ? 'w-4 h-4 text-green-400' : 'w-5 h-5 text-green-400'} />
+                  ) : (
+                    <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  )}
+                </Button>
+
+                <Button
+                  size="icon"
+                  onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
                   className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
                   <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
@@ -107,17 +160,16 @@ export const MusicCard = ({
                 {onToggleFavorite && (
                   <Button
                     size="icon"
-                    onClick={onToggleFavorite}
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
                     className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                   >
                     <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
                   </Button>
                 )}
-                {/* Removed Offline Download Button */}
                 {onDelete && (
                   <Button
                     size="icon"
-                    onClick={onDelete}
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
                     variant="destructive"
                     className={`rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                   >
