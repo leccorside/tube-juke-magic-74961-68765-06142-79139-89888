@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, X, Loader2, Shuffle, Clock } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, X, Loader2, Shuffle, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
@@ -9,11 +9,11 @@ import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PlayerProgress } from "./PlayerProgress";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VolumePopover } from "./VolumePopover";
-import { truncateWords } from "@/lib/utils"; // Importando a nova utilidade
+import { truncateWords } from "@/lib/utils";
+import { QueueDialog } from "./QueueDialog"; // Importando o novo componente
 
 const YT_PLAYING = 1;
 const YT_PAUSED = 2;
@@ -40,7 +40,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isMobile = useIsMobile();
   const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayerType | null>(null);
-  const mobileVolumeTriggerRef = useRef<HTMLButtonElement>(null); // Ref para o botão de trigger
+  const mobileVolumeTriggerRef = useRef<HTMLButtonElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -50,6 +50,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const [isMuted, setIsMuted] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false);
+  const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false); // Novo estado para a fila
   
   const { isOnline, isAvailableOffline, getOfflineAudioUrl } = useOfflineMusic();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -172,7 +173,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     }
   }, [isMuted, volume, previousVolume, isOfflineMode]);
 
-  const toggleMuteWithoutEvent = useCallback(() => {
+  const toggleMuteWithoutEvent = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     toggleMute();
   }, [toggleMute]);
 
@@ -240,8 +242,18 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <VolumeIcon className="w-4 h-4" />
       </Button>
       
-      {/* Placeholder para manter o alinhamento no mobile */}
-      <div className="hidden md:block w-8 h-8" /> 
+      {/* Queue Button (Mobile/Desktop) */}
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        className="text-muted-foreground hover:text-primary w-8 h-8 md:w-10 md:h-10 hover:bg-transparent" 
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsQueueDialogOpen(true);
+        }}
+      >
+        <ListMusic className="w-4 h-4 md:w-5 md:h-5" />
+      </Button>
     </>
   );
 
@@ -331,6 +343,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           triggerRef={mobileVolumeTriggerRef}
         />
       )}
+      
+      {/* Queue Dialog */}
+      <QueueDialog
+        isOpen={isQueueDialogOpen}
+        onClose={() => setIsQueueDialogOpen(false)}
+      />
     </>
   );
 };
