@@ -265,12 +265,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         />
       )}
       
-      {/* Close Button (Absolute position on mobile, hidden on desktop) */}
+      {/* Close Button */}
       <Button
         size="icon"
         variant="ghost"
         onClick={onClose}
-        className="absolute top-2 left-2 md:hidden text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-10"
+        className="absolute top-2 left-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"
       >
         <X className="w-4 h-4" />
       </Button>
@@ -280,8 +280,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         {/* Mobile Layout: Song Info (Top) + Controls (Middle) + Progress (Bottom) */}
         <div className="flex flex-col md:flex-row md:items-center md:gap-4">
           
-          {/* Song Info (Adjusted padding for mobile close button) */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10 md:pl-0">
+          {/* Song Info (Adjusted padding for close button) */}
+          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10">
             <img
               src={currentSong.thumbnail_url || "/placeholder.svg"}
               alt={currentSong.title}
