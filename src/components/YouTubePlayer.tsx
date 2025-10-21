@@ -79,7 +79,9 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   }, []);
 
   return (
-    <div className="absolute -z-10 opacity-0">
+    // Alterado o estilo para usar um tamanho mínimo e posicionamento fora da tela,
+    // em vez de opacity: 0 e z-index negativo, para evitar que o navegador pause o iframe.
+    <div style={{ position: 'fixed', top: '-1000px', left: '-1000px', width: '1px', height: '1px', overflow: 'hidden' }}>
       <YouTube
         videoId={videoId}
         opts={opts}
