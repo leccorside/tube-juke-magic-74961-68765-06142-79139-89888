@@ -14,16 +14,14 @@ interface SearchResult {
   duration: number;
 }
 
+// Lista de instâncias Invidious mais confiáveis
 const invidiousInstances = [
+  'https://invidious.projectsegfau.lt',
+  'https://vid.puffyan.us',
   'https://yewtu.be',
-  'https://inv.us.projectsegfau.lt',
-  'https://y.com.sb',
-  'https://invidious.io.lol',
   'https://iv.ggtyler.dev',
+  'https://invidious.snopyta.org',
   'https://invidious.epicsite.xyz',
-  'https://invidious.projectsegfau.lt', // Novo
-  'https://vid.puffyan.us', // Novo
-  'https://invidious.snopyta.org', // Novo
 ];
 
 // Function to search YouTube videos using Invidious API
