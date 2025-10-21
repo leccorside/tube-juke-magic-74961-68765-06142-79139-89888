@@ -218,16 +218,15 @@ const Index = () => {
               <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent shadow-glow">
                 <Music2 className="w-6 h-6 md:w-8 md:h-8 text-primary-foreground" />
               </div>
-              {!isMobile && (
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    Leccor Music
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Busque e ouça suas músicas favoritas do YouTube
-                  </p>
-                </div>
-              )}
+              {/* Removida a condição !isMobile para exibir sempre */}
+              <div>
+                <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Leccor Music
+                </h1>
+                <p className="text-muted-foreground text-xs md:text-base">
+                  Busque e ouça suas músicas favoritas do YouTube
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
