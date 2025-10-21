@@ -161,6 +161,30 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlayerReady = !isLoadingAudio;
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
+  const MobileVolumeControl = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        {/* Este botão agora está fora da área clicável principal */}
+        <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady}>
+          <Volume2 className="w-4 h-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-40 p-3 mb-2" side="top" align="end">
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <Volume2 className="w-4 h-4 text-muted-foreground" />
+          <Slider 
+            value={[volume]} 
+            max={100} 
+            step={1} 
+            onValueChange={handleVolumeChange} 
+            className="flex-1" 
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
   const PlayerControls = ({ isFull = false }: { isFull?: boolean }) => (
     <>
       <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
@@ -182,28 +206,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           <Clock className="w-6 h-6" />
         </Button>
       ) : (
-        <Popover>
-          <PopoverTrigger asChild>
-            {/* CORREÇÃO: Removido o onClick do Button. O PopoverTrigger deve lidar com o clique. 
-               O PopoverContent e o Slider já têm e.stopPropagation() para impedir a abertura da tela cheia. */}
-            <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady}>
-              <Volume2 className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-40 p-3 mb-2" side="top" align="end">
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <Volume2 className="w-4 h-4 text-muted-foreground" />
-              <Slider 
-                value={[volume]} 
-                max={100} 
-                step={1} 
-                onValueChange={handleVolumeChange} 
-                className="flex-1" 
-                onMouseDown={(e) => e.stopPropagation()}
-              />
-            </div>
-          </PopoverContent>
-        </Popover>
+        // O Popover de volume mobile foi movido para fora do PlayerControls
+        <div className="w-8 h-8 md:hidden" /> // Placeholder para manter o alinhamento
       )}
     </>
   );
@@ -243,15 +247,18 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       ) : (
         <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden cursor-pointer animate-in slide-in-from-bottom duration-300">
           
-          {/* Botão de Fechar - Deve sempre usar handleAction para parar a propagação */}
+          {/* Botões de Ação Absolutos (Fora da área clicável para FullScreen) */}
           <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 left-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
+          <div className="absolute top-2 right-2 md:hidden z-20">
+            <MobileVolumeControl />
+          </div>
           
           {/* Conteúdo principal do Mini-Player - Clicável para abrir tela cheia */}
           <div onClick={handleOpenFullScreen} className="container mx-auto px-4 py-3 md:py-4 relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:gap-4">
               
               {/* Song Info */}
-              <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10">
+              <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10 pr-10 md:pl-0 md:pr-0">
                 <img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" />
                 <div className="min-w-0 text-left">
                   <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
