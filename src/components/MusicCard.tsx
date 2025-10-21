@@ -121,8 +121,8 @@ export const MusicCard = ({
           {/* Search variant: download and queue buttons */}
           {variant === "search" && (
             <div className="absolute inset-0 flex items-center justify-center gap-4">
-              {/* Botão de Download Oculto */}
-              {/* {onDownload && !isDownloading && (
+              {/* Botão de Download (Adicionar à Biblioteca) - VISÍVEL */}
+              {onDownload && !isDownloading && (
                 <Button
                   size="icon"
                   onClick={onDownload}
@@ -130,7 +130,7 @@ export const MusicCard = ({
                 >
                   <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> 
                 </Button>
-              )} */}
+              )}
               <Button
                 size="icon"
                 onClick={handleAddToQueue}
@@ -170,6 +170,7 @@ export const MusicCard = ({
                 </Button>
                 
                 {/* Offline Toggle Button (Download Oculto) */}
+                {/* Ocultado conforme solicitado */}
                 {/* <Button
                   size="icon"
                   onClick={handleToggleOffline}
