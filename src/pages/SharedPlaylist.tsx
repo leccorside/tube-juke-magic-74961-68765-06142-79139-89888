@@ -41,6 +41,7 @@ export default function SharedPlaylist() {
 
   useEffect(() => {
     if (id) {
+      console.log("Attempting to load shared playlist ID:", id); // Adicionado log
       loadPlaylistDetails();
     }
   }, [id]);
@@ -95,9 +96,13 @@ export default function SharedPlaylist() {
       if (songsError) throw songsError;
       setSongs(songsData || []);
     } catch (error: any) {
+      console.error("Error loading shared playlist:", error); // Adicionado log de erro
       toast.error("Erro ao carregar playlist compartilhada: " + error.message);
-      // Se falhar, navegamos para a home, pois o usuário pode não estar logado
-      navigate("/", { replace: true }); 
+      
+      // Se o erro for de playlist não encontrada, redireciona
+      if (error.message.includes("Playlist não encontrada")) {
+        navigate("/", { replace: true }); 
+      }
     } finally {
       setIsLoading(false);
     }
