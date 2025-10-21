@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner"; // Import Sonner toast
 
 interface MusicPlayerProps {
   currentSong: {
@@ -88,8 +89,10 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
           console.log('Using audio URL directly:', data.audioUrl);
           urlToPlay = data.audioUrl;
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error loading audio:', error);
+          toast.error("Erro ao carregar áudio: " + (error.message || "Falha na função Edge."));
+          urlToPlay = null; // Ensure URL is null on failure
         }
       }
       
@@ -234,7 +237,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <audio
           ref={audioRef}
           src={audioUrl}
-          autoPlay={false} // Removed explicit autoplay here, relying on useEffect
+          autoPlay={false} // Relying on useEffect for play attempt
           onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
           onDurationChange={(e) => {
             // Only update duration if it wasn't set from context (e.g., for offline songs)
@@ -252,7 +255,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             console.error('Audio playback error:', e);
             setIsLoadingAudio(false);
             setIsPlaying(false);
-            toast.error("Erro ao carregar áudio. Tente novamente.");
+            toast.error("Erro de reprodução de áudio. O link pode estar expirado.");
           }}
           style={{ display: 'none' }}
         />
