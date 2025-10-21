@@ -14,6 +14,9 @@ const INVIDIOUS_INSTANCES = [
   'https://inv.tux.pizza',
   'https://invidious.jing.rocks',
   'https://iv.melmac.space',
+  'https://invidious.projectsegfau.lt', // Added more instances
+  'https://y.com.sb',
+  'https://invidious.epicsite.xyz',
 ];
 
 interface AudioFormat {
@@ -72,13 +75,15 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
       // Sort by bitrate (higher is better)
       audioFormats.sort((a, b) => b.bitrate - a.bitrate);
       
+      const bestFormat = audioFormats[0];
+
       console.log(`✅ Success with ${instance}, found audio format:`, {
-        mimeType: audioFormats[0].mimeType,
-        quality: audioFormats[0].quality,
-        bitrate: audioFormats[0].bitrate
+        mimeType: bestFormat.mimeType,
+        quality: bestFormat.quality,
+        bitrate: bestFormat.bitrate
       });
       
-      return audioFormats[0].url;
+      return bestFormat.url;
     } catch (error) {
       const errorMsg = `${instance} error: ${error instanceof Error ? error.message : String(error)}`;
       console.error(errorMsg);
@@ -112,7 +117,10 @@ serve(async (req) => {
     );
 
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      throw new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { youtubeId } = await req.json();
@@ -138,10 +146,14 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in get-audio-stream:', error);
+    
+    // Handle specific error from getAudioStreamUrl
+    const status = error instanceof Error && error.message.includes('Could not fetch audio stream') ? 503 : 400;
+
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
-        status: 400,
+        status: status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
