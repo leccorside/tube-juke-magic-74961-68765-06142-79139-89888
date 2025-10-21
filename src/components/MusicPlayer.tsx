@@ -55,8 +55,11 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       setIsLoadingAudio(true);
       setIsPlaying(false); // Reset playing state when loading new song
       setCurrentTime(0); // Reset time
+      setDuration(currentSong.duration || 0); // Use duration from context if available
 
-      // First, check if audio is available offline
+      let urlToPlay: string | null = null;
+
+      // 1. Check if audio is available offline
       if ('caches' in window) {
         try {
           const cache = await caches.open('music-offline-v1');
@@ -65,33 +68,33 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           
           if (response) {
             const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            setAudioUrl(url);
-            setIsLoadingAudio(false);
-            return;
+            urlToPlay = URL.createObjectURL(blob);
           }
         } catch (error) {
           console.error('Error checking offline audio:', error);
         }
       }
 
-      // If not offline, get audio URL from edge function
-      try {
-        console.log('Fetching audio URL from edge function');
-        const { data, error } = await supabase.functions.invoke('get-audio-stream', {
-          body: { youtubeId: currentSong.youtube_id },
-        });
+      // 2. If not offline, get audio URL from edge function
+      if (!urlToPlay) {
+        try {
+          console.log('Fetching audio URL from edge function');
+          const { data, error } = await supabase.functions.invoke('get-audio-stream', {
+            body: { youtubeId: currentSong.youtube_id },
+          });
 
-        if (error) throw error;
-        if (!data?.audioUrl) throw new Error('No audio URL returned');
+          if (error) throw error;
+          if (!data?.audioUrl) throw new Error('No audio URL returned');
 
-        console.log('Using audio URL directly:', data.audioUrl);
-        setAudioUrl(data.audioUrl);
-      } catch (error) {
-        console.error('Error loading audio:', error);
-      } finally {
-        setIsLoadingAudio(false);
+          console.log('Using audio URL directly:', data.audioUrl);
+          urlToPlay = data.audioUrl;
+        } catch (error) {
+          console.error('Error loading audio:', error);
+        }
       }
+      
+      setAudioUrl(urlToPlay);
+      setIsLoadingAudio(false);
     };
 
     loadAudioUrl();
@@ -102,7 +105,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [currentSong?.youtube_id]);
+  }, [currentSong?.youtube_id, currentSong?.duration]);
 
 
   // Update volume when it changes
@@ -179,7 +182,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(err => console.error('Error playing audio:', err));
+        // Attempt to play, handling potential autoplay restrictions
+        audioRef.current.play().catch(err => {
+          console.error('Error playing audio (user interaction required):', err);
+          // If play fails (e.g., due to autoplay policy), keep isPlaying false
+          setIsPlaying(false);
+        });
       }
     }
   };
@@ -211,8 +219,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <audio
           ref={audioRef}
           src={audioUrl}
+          autoPlay={true} // Explicitly set autoplay
           onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+          onDurationChange={(e) => {
+            // Only update duration if it wasn't set from context (e.g., for offline songs)
+            if (!currentSong.duration) {
+              setDuration(e.currentTarget.duration);
+            }
+          }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onEnded={() => {
@@ -220,8 +234,16 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             if (onNext) onNext();
           }}
           onLoadedMetadata={(e) => {
-            setDuration(e.currentTarget.duration);
-            e.currentTarget.play().catch(err => console.error('Error auto-playing audio:', err));
+            // Attempt to play immediately after metadata loads
+            e.currentTarget.play().catch(err => {
+              console.warn('Autoplay blocked, user interaction needed:', err);
+              setIsPlaying(false); // Ensure button shows Play state
+            });
+          }}
+          onError={(e) => {
+            console.error('Audio playback error:', e);
+            setIsLoadingAudio(false);
+            setIsPlaying(false);
           }}
           style={{ display: 'none' }}
         />
@@ -269,7 +291,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10"
                 disabled={isLoadingAudio || !audioUrl}
               >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
+                {isLoadingAudio ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current" />
+                )}
               </Button>
               <Button
                 size="icon"
@@ -292,6 +320,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 step={1}
                 onValueChange={handleSeek}
                 className="flex-1"
+                disabled={!audioUrl || isLoadingAudio}
               />
               <span className="text-xs text-muted-foreground min-w-[40px]">
                 {formatTime(duration)}

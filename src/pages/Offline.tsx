@@ -26,15 +26,19 @@ const Offline = () => {
   };
 
   const handlePlay = (song: typeof offlineSongs[0]) => {
-    setCurrentSong({
+    // Note: duration is set to 0 here, but the MusicPlayer will try to get the actual duration 
+    // from the audio file metadata once loaded.
+    const currentSongData = {
       id: song.id,
       title: song.title,
       artist: song.artist,
       thumbnail_url: song.thumbnailUrl,
-      audio_url: '', // Not used for offline
+      audio_url: '', // Not used for offline, MusicPlayer handles fetching via youtube_id
       youtube_id: song.youtubeId,
       duration: 0,
-    });
+    };
+    
+    setCurrentSong(currentSongData);
     
     const playlist = offlineSongs.map(s => ({
       id: s.id,

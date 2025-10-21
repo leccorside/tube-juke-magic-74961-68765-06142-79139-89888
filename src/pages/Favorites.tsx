@@ -57,7 +57,17 @@ const Favorites = () => {
   // Update playlist when favorites change
   useEffect(() => {
     if (favorites) {
-      setPlaylist(favorites);
+      // Map favorites back to the Song structure expected by MusicPlayerContext
+      const playlistSongs: Song[] = favorites.map((fav: any) => ({
+        id: fav.id,
+        title: fav.title,
+        artist: fav.artist,
+        thumbnail_url: fav.thumbnail_url,
+        audio_url: fav.audio_url,
+        duration: fav.duration,
+        youtube_id: fav.youtube_id,
+      }));
+      setPlaylist(playlistSongs);
     }
   }, [favorites, setPlaylist]);
 
