@@ -1,5 +1,4 @@
 // @ts-nocheck
-/// <reference lib="deno.ns" />
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -202,7 +201,7 @@ Deno.serve(async (req) => {
         .from('songs')
         .select('*')
         .eq('youtube_id', videoId)
-        .eq('user.id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (existingSong) {
