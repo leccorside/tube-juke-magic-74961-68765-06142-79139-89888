@@ -132,7 +132,7 @@ async function getDirectAudioUrl(videoId: string): Promise<string> {
   }
 
   console.error('Failed to find direct audio URL. Last error:', lastError);
-  throw new Error('Não foi possível obter o link de áudio direto para download.');
+  throw new Error('Não foi possível obter o link de áudio direto para download. Todas as fontes falharam.');
 }
 
 
@@ -224,12 +224,21 @@ Deno.serve(async (req) => {
         );
       }
       
-      const directAudioUrl = await getDirectAudioUrl(videoId);
-      
-      return new Response(
-        JSON.stringify({ success: true, audioUrl: directAudioUrl }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        const directAudioUrl = await getDirectAudioUrl(videoId);
+        
+        return new Response(
+          JSON.stringify({ success: true, audioUrl: directAudioUrl }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        // Captura o erro específico do getDirectAudioUrl
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar link de áudio.';
+        return new Response(
+          JSON.stringify({ success: false, error: errorMessage }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
       
     } else if (action === 'download') {
       // Check if song already exists for this user

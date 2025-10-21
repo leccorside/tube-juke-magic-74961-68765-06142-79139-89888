@@ -141,7 +141,6 @@ export const useOfflineMusic = () => {
       }
       
       // 2. Chamar Edge Function para obter o URL de áudio direto, passando o token explicitamente
-      // Embora o invoke deva fazer isso, passamos o headers para garantir.
       const { data: audioData, error: audioError } = await supabase.functions.invoke("search-and-download", {
         body: { action: "get_audio_url", videoId: song.youtube_id },
         headers: {
@@ -150,6 +149,19 @@ export const useOfflineMusic = () => {
       });
       
       if (audioError) {
+        // Se for um erro de rede ou status não-2xx, o objeto error do invoke é preenchido.
+        // Se o erro for 401, a mensagem será 'Falha na comunicação...'.
+        // Se for 500, a mensagem de erro do Edge Function deve ser propagada no corpo.
+        
+        // Tentativa de extrair a mensagem de erro do corpo da resposta, se disponível.
+        // Como o invoke não expõe o corpo da resposta em caso de erro, confiamos na mensagem de erro do Edge Function.
+        
+        // Se o Edge Function retornou um erro 500 com a mensagem de erro no corpo:
+        if (audioData && audioData.error) {
+          throw new Error(audioData.error);
+        }
+        
+        // Caso contrário, use a mensagem genérica de falha de comunicação
         const errorMessage = audioError.message.includes('non-2xx status code') 
           ? 'Falha na comunicação com o servidor. Verifique se você está logado.'
           : audioError.message;
