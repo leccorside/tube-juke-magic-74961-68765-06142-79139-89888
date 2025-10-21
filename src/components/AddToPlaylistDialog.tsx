@@ -135,22 +135,13 @@ export const AddToPlaylistDialog = ({
     }
   };
 
-  const renderPlaylistList = () => (
-    <>
-      <div className="flex justify-end mb-4">
-        <Button 
-          variant="outline" 
-          onClick={() => setIsCreating(true)}
-          disabled={isLoading}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Playlist
-        </Button>
-      </div>
-      
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Carregando playlists...</div>
-      ) : playlists.length === 0 ? (
+  const renderPlaylistList = () => {
+    if (isLoading) {
+      return <div className="text-center py-8 text-muted-foreground">Carregando playlists...</div>;
+    }
+
+    if (playlists.length === 0) {
+      return (
         <div className="text-center py-8">
           <Music className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground mb-4">
@@ -161,7 +152,22 @@ export const AddToPlaylistDialog = ({
             Criar Primeira Playlist
           </Button>
         </div>
-      ) : (
+      );
+    }
+
+    return (
+      <>
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsCreating(true)}
+            disabled={isLoading}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Playlist
+          </Button>
+        </div>
+        
         <ScrollArea className="max-h-[400px]">
           <div className="space-y-2">
             {playlists.map((playlist) => (
@@ -178,9 +184,9 @@ export const AddToPlaylistDialog = ({
             ))}
           </div>
         </ScrollArea>
-      )}
-    </>
-  );
+      </>
+    );
+  };
 
   const renderCreateForm = () => (
     <div className="space-y-4 mt-4">
