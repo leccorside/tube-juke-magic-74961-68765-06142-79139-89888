@@ -53,6 +53,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       }
 
       setIsLoadingAudio(true);
+      setIsPlaying(false); // Reset playing state when loading new song
+      setCurrentTime(0); // Reset time
 
       // First, check if audio is available offline
       if ('caches' in window) {
