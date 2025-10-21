@@ -41,7 +41,7 @@ export default function SharedPlaylist() {
 
   useEffect(() => {
     if (id) {
-      console.log("Attempting to load shared playlist ID:", id); // Adicionado log
+      console.log("Attempting to load shared playlist ID:", id);
       loadPlaylistDetails();
     }
   }, [id]);
@@ -49,7 +49,6 @@ export default function SharedPlaylist() {
   // Redirecionamento após login/cadastro
   useEffect(() => {
     if (!authLoading && user && location.state?.redirectedFromAuth) {
-      // Se o usuário acabou de logar e foi redirecionado para cá, recarrega os detalhes
       loadPlaylistDetails();
     }
   }, [user, authLoading]);
@@ -57,24 +56,27 @@ export default function SharedPlaylist() {
   const loadPlaylistDetails = async () => {
     setIsLoading(true);
     try {
-      // 1. Load playlist info
+      // 1. Load playlist info (Must be accessible via public RLS)
       const { data: playlistData, error: playlistError } = await supabase
         .from("playlists")
         .select("name, user_id")
         .eq("id", id)
-        .maybeSingle(); // <-- Usando maybeSingle
+        .maybeSingle();
 
-      if (playlistError) throw playlistError;
+      if (playlistError) {
+        console.error("Supabase Playlist Query Error:", playlistError);
+        throw new Error("Erro de consulta da playlist.");
+      }
       
       if (!playlistData) {
-        // Se não houver dados, a playlist não existe
+        // Se não houver dados, a playlist não existe ou o ID é inválido.
         throw new Error("Playlist não encontrada ou ID inválido.");
       }
       
       setPlaylistName(playlistData.name);
       setPlaylistOwnerId(playlistData.user_id);
 
-      // 2. Load songs in playlist
+      // 2. Load songs in playlist (Must be accessible via public RLS)
       const { data: songsData, error: songsError } = await supabase
         .from("playlist_songs")
         .select(`
@@ -93,14 +95,20 @@ export default function SharedPlaylist() {
         .eq("playlist_id", id)
         .order("position", { ascending: true });
 
-      if (songsError) throw songsError;
+      if (songsError) {
+        console.error("Supabase Playlist Songs Query Error:", songsError);
+        throw new Error("Erro ao carregar músicas da playlist.");
+      }
+      
       setSongs(songsData || []);
     } catch (error: any) {
-      console.error("Error loading shared playlist:", error); // Adicionado log de erro
-      toast.error("Erro ao carregar playlist compartilhada: " + error.message);
+      console.error("Error loading shared playlist:", error);
+      const errorMessage = error.message || "Erro desconhecido ao carregar playlist.";
       
-      // Se o erro for de playlist não encontrada, redireciona
-      if (error.message.includes("Playlist não encontrada")) {
+      toast.error("Erro ao carregar playlist compartilhada: " + errorMessage);
+      
+      // Redireciona se for um erro de não encontrado
+      if (errorMessage.includes("Playlist não encontrada") || errorMessage.includes("Erro de consulta da playlist")) {
         navigate("/", { replace: true }); 
       }
     } finally {
