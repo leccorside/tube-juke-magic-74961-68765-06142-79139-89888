@@ -9,9 +9,11 @@ import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PlayerProgress } from "./PlayerProgress";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { VolumePopover } from "./VolumePopover"; // Importando o novo componente
+import { VolumePopover } from "./VolumePopover";
+import { truncateWords } from "@/lib/utils"; // Importando a nova utilidade
 
 const YT_PLAYING = 1;
 const YT_PAUSED = 2;
@@ -47,7 +49,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const [previousVolume, setPreviousVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false); // Estado para o popover customizado
+  const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false);
   
   const { isOnline, isAvailableOffline, getOfflineAudioUrl } = useOfflineMusic();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -170,9 +172,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     }
   }, [isMuted, volume, previousVolume, isOfflineMode]);
 
-  const toggleMuteWithoutEvent = useCallback((e: React.MouseEvent) => {
-    // Usamos o evento aqui apenas para stopPropagation, mas a lógica de mute não precisa dele
-    e.stopPropagation();
+  const toggleMuteWithoutEvent = useCallback(() => {
     toggleMute();
   }, [toggleMute]);
 
@@ -187,6 +187,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
   
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : Volume2;
+  
+  const truncatedTitle = truncateWords(currentSong.title, 6);
 
   const PlayerControls = () => (
     <>
@@ -267,7 +269,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0">
               <img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" />
               <div className="min-w-0 text-left">
-                <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
+                <h4 className="font-semibold text-foreground truncate text-sm md:text-base" title={currentSong.title}>{truncatedTitle}</h4>
                 <p className="text-xs md:text-sm text-muted-foreground truncate">
                   {currentSong.artist} 
                   {isOfflineMode && <span className="ml-2 text-primary/80">(Offline)</span>}

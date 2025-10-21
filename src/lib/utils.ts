@@ -16,3 +16,12 @@ export function formatBytes(bytes: number, decimals = 2) {
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
+
+export function truncateWords(text: string, maxWords: number): string {
+  if (!text) return '';
+  const words = text.split(/\s+/);
+  if (words.length > maxWords) {
+    return words.slice(0, maxWords).join(' ') + '...';
+  }
+  return text;
+}
