@@ -232,7 +232,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             </div>
 
             {/* Controls & Progress (Middle section) */}
-            <div className="flex flex-col items-center gap-1 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
+            {/* Aumentando o gap vertical de gap-1 para gap-4 no mobile */}
+            <div className="flex flex-col items-center gap-4 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
               
               {/* Control Buttons */}
               <div className="flex items-center gap-2">
