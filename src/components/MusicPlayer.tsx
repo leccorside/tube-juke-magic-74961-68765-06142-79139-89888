@@ -148,8 +148,9 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     if (!isOfflineMode && youtubePlayerRef.current) youtubePlayerRef.current.setVolume(newVolume);
   };
   
-  const toggleMute = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  // Refatorando toggleMute para aceitar evento opcionalmente
+  const toggleMute = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
     
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
@@ -171,6 +172,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     }
     // Offline player handles volume sync via useEffect
   }, [isMuted, volume, previousVolume, isOfflineMode]);
+
+  // Função auxiliar para ser usada em handleAction
+  const toggleMuteWithoutEvent = useCallback(() => {
+    // Chamamos toggleMute sem passar o evento, pois handleAction já lidou com a propagação
+    toggleMute();
+  }, [toggleMute]);
 
   // Função auxiliar para lidar com ações internas e impedir a propagação
   const handleAction = (e: React.MouseEvent, action?: () => void) => {
@@ -239,7 +246,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <Button 
               size="icon" 
               variant="ghost" 
-              onClick={toggleMute} 
+              // Usando handleAction com a versão sem evento
+              onClick={(e) => handleAction(e, toggleMuteWithoutEvent)} 
               className="text-muted-foreground hover:bg-transparent hover:text-primary h-8 w-8"
             >
               <VolumeIcon className="w-4 h-4" />
