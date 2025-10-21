@@ -76,58 +76,22 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         }
       }
 
-      // 2. If not offline, use the Edge Function proxy URL
+      // 2. If not offline, fetch the direct stream URL from the Edge Function
       if (!urlToPlay) {
         try {
-          console.log('Using Edge Function proxy URL for streaming');
+          console.log('Invoking Edge Function to get stream URL');
           
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) throw new Error('Not authenticated');
+          const { data, error } = await supabase.functions.invoke("stream-audio", {
+            body: { youtubeId: currentSong.youtube_id },
+          });
 
-          // Construct the direct URL to the Edge Function, passing required parameters
-          // The Edge Function will need to be updated to accept youtubeId and token via query params
-          // or we must use fetch and create a Blob URL, which supports Range requests poorly.
+          if (error) throw error;
           
-          // Since the Edge Function is protected by Auth, we must pass the token.
-          // Let's use the direct URL approach, assuming the Edge Function can handle the token in the body 
-          // or we use a temporary solution: fetch the stream and create a Blob URL.
-          
-          // *** Reverting to the previous logic: fetch the stream and create a Blob URL ***
-          // This is necessary because the HTML5 <audio> tag cannot send custom headers (like Authorization)
-          // and passing the token in the URL is insecure unless the Edge Function is modified to handle it.
-          
-          // Let's use fetch to get the stream and create a Blob URL.
-          
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stream-audio`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({ youtubeId: currentSong.youtube_id })
-            }
-          );
-
-          if (response.status === 401) throw new Error('Unauthorized access to stream function.');
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Stream function failed:', errorText);
-            throw new Error(`Falha ao obter stream: ${response.status}`);
+          if (data.audioUrl) {
+            urlToPlay = data.audioUrl;
+          } else {
+            throw new Error(data.error || 'Resposta inválida da função Edge.');
           }
-          
-          // Check if the response is JSON (error message) or audio stream
-          const contentType = response.headers.get('Content-Type');
-          if (contentType && contentType.includes('application/json')) {
-             // This means the Edge Function returned a JSON error (e.g., Invidious failed)
-             const errorData = await response.json();
-             throw new Error(errorData.error || 'Erro desconhecido na função Edge.');
-          }
-
-          // If it's an audio stream, create a Blob URL
-          const audioBlob = await response.blob();
-          urlToPlay = URL.createObjectURL(audioBlob);
           
         } catch (error: any) {
           console.error('Error loading audio from Edge:', error);
@@ -295,7 +259,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             console.error('Audio playback error:', e);
             setIsLoadingAudio(false);
             setIsPlaying(false);
-            toast.error("Erro de reprodução de áudio. O link pode estar expirado.");
+            toast.error("Erro de reprodução de áudio. O link pode estar expirado ou o servidor de streaming está indisponível.");
           }}
           style={{ display: 'none' }}
         />

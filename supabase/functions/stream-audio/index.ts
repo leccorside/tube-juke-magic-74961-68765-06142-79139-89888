@@ -4,7 +4,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Expose-Headers': 'Content-Length, Content-Type, Content-Range',
 };
 
 // Invidious instances for fallback
@@ -27,7 +26,7 @@ interface AudioFormat {
 }
 
 async function getAudioStreamUrl(youtubeId: string): Promise<string> {
-  console.log('Fetching audio stream URL for proxy:', youtubeId);
+  console.log('Fetching audio stream URL:', youtubeId);
   
   const errors: string[] = [];
   
@@ -75,7 +74,7 @@ async function getAudioStreamUrl(youtubeId: string): Promise<string> {
       
       const bestFormat = audioFormats[0];
       
-      console.log(`✅ Success with ${instance}, found audio URL`);
+      console.log(`✅ Success with ${instance}, found audio URL: ${bestFormat.url}`);
       
       return bestFormat.url;
     } catch (error) {
@@ -129,33 +128,14 @@ Deno.serve(async (req) => {
 
     const audioUrl = await getAudioStreamUrl(youtubeId);
     
-    // Proxy the audio stream
-    const audioResponse = await fetch(audioUrl, {
-      headers: {
-        // Important: Forward Range header for seeking
-        ...(req.headers.get('Range') && { 'Range': req.headers.get('Range')! }),
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    // Return the direct audio URL in JSON format
+    return new Response(
+      JSON.stringify({ audioUrl }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    });
-
-    if (!audioResponse.ok) {
-      throw new Error(`Failed to fetch audio stream: ${audioResponse.statusText}`);
-    }
-
-    // Create headers for streaming response
-    const responseHeaders = new Headers(corsHeaders);
-    audioResponse.headers.forEach((value, key) => {
-      // Copy relevant headers for streaming
-      if (['content-type', 'content-length', 'content-range', 'accept-ranges'].includes(key.toLowerCase())) {
-        responseHeaders.set(key, value);
-      }
-    });
-    
-    // Return the proxied stream
-    return new Response(audioResponse.body, {
-      status: audioResponse.status,
-      headers: responseHeaders,
-    });
+    );
 
   } catch (error) {
     console.error('Error in stream-audio:', error);
