@@ -70,49 +70,51 @@ export const InstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-40 animate-in slide-in-from-bottom-5">
-      <div className="bg-card border border-border rounded-lg shadow-lg p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Download className="h-6 w-6 text-primary-foreground" />
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-40 bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-sm animate-in fade-in duration-300">
+        <div className="bg-card border border-border rounded-lg shadow-2xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Download className="h-6 w-6 text-primary-foreground" />
+              </div>
             </div>
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground mb-1">
-              Instalar Leccor Music
-            </h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Acesse suas músicas direto da tela inicial como um app nativo
-            </p>
             
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleInstallClick}
-                size="sm"
-                className="flex-1"
-              >
-                Instalar
-              </Button>
-              <Button 
-                onClick={handleLearnMore}
-                variant="outline"
-                size="sm"
-              >
-                Saiba mais
-              </Button>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground mb-1">
+                Instalar Leccor Music
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Acesse suas músicas direto da tela inicial como um app nativo
+              </p>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleInstallClick}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Instalar
+                </Button>
+                <Button 
+                  onClick={handleLearnMore}
+                  variant="outline"
+                  size="sm"
+                >
+                  Saiba mais
+                </Button>
+              </div>
             </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="flex-shrink-0 h-8 w-8"
+              onClick={handleDismiss}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 h-8 w-8"
-            onClick={handleDismiss}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>
