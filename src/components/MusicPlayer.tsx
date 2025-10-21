@@ -9,9 +9,9 @@ import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PlayerProgress } from "./PlayerProgress"; // Importando o novo componente
-import { useIsMobile } from "@/hooks/use-mobile"; // Importando useIsMobile
+import { PlayerProgress } from "./PlayerProgress";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { VolumePopover } from "./VolumePopover"; // Importando o novo componente
 
 const YT_PLAYING = 1;
 const YT_PAUSED = 2;
@@ -35,17 +35,19 @@ interface MusicPlayerProps {
 
 export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
   const { isShuffling, toggleShuffle } = useMusicPlayer();
-  const isMobile = useIsMobile(); // Usando o hook para detectar mobile
+  const isMobile = useIsMobile();
   const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayerType | null>(null);
-  
+  const mobileVolumeTriggerRef = useRef<HTMLButtonElement>(null); // Ref para o botão de trigger
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
-  const [previousVolume, setPreviousVolume] = useState(100); // Para restaurar o volume
+  const [previousVolume, setPreviousVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isVolumePopoverOpen, setIsVolumePopoverOpen] = useState(false); // Estado para o popover customizado
   
   const { isOnline, isAvailableOffline, getOfflineAudioUrl } = useOfflineMusic();
   const [isOfflineMode, setIsOfflineMode] = useState(false);
@@ -112,7 +114,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const handlePlayerReady = (player: YouTubePlayerType) => {
     youtubePlayerRef.current = player;
     setIsLoadingAudio(false);
-    // Set initial volume and mute state
     player.setVolume(isMuted ? 0 : volume);
   };
 
@@ -148,7 +149,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     if (!isOfflineMode && youtubePlayerRef.current) youtubePlayerRef.current.setVolume(newVolume);
   };
   
-  // Refatorando toggleMute para aceitar evento opcionalmente
   const toggleMute = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     
@@ -157,11 +157,9 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     
     let targetVolume;
     if (newMutedState) {
-      // Mute: set volume to 0, save current volume
       setPreviousVolume(volume > 0 ? volume : 100);
       targetVolume = 0;
     } else {
-      // Unmute: restore previous volume (or 100 if previous was 0)
       targetVolume = previousVolume > 0 ? previousVolume : 100;
     }
     
@@ -170,16 +168,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     if (!isOfflineMode && youtubePlayerRef.current) {
       youtubePlayerRef.current.setVolume(targetVolume);
     }
-    // Offline player handles volume sync via useEffect
   }, [isMuted, volume, previousVolume, isOfflineMode]);
 
-  // Função auxiliar para ser usada em handleAction
-  const toggleMuteWithoutEvent = useCallback(() => {
-    // Chamamos toggleMute sem passar o evento, pois handleAction já lidou com a propagação
+  const toggleMuteWithoutEvent = useCallback((e: React.MouseEvent) => {
+    // Usamos o evento aqui apenas para stopPropagation, mas a lógica de mute não precisa dele
+    e.stopPropagation();
     toggleMute();
   }, [toggleMute]);
 
-  // Função auxiliar para lidar com ações internas e impedir a propagação
   const handleAction = (e: React.MouseEvent, action?: () => void) => {
     e.stopPropagation();
     action?.();
@@ -205,7 +201,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       >
         <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
-      <div className="flex items-center z-30"> {/* Z-INDEX AUMENTADO */}
+      <div className="flex items-center z-30">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -227,48 +223,20 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         </Button>
       </div>
       
-      {/* Volume Control Mobile (Popover) */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="md:hidden text-foreground hover:text-primary w-8 h-8 hover:bg-transparent" 
-            disabled={!isPlayerReady} 
-            onClick={(e) => e.stopPropagation()} // Mantém stopPropagation para evitar cliques no player
-          >
-            <VolumeIcon className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-40 p-3 mb-2 z-[100]" side="top" align="end">
-          {/* Adicionando onPointerDown para capturar eventos de toque/mouse antes do Radix */}
-          <div 
-            className="flex items-center gap-2" 
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {/* Adicionando o botão de Mute/Unmute dentro do Popover para mobile */}
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              // Usando handleAction com a versão sem evento
-              onClick={(e) => handleAction(e, toggleMuteWithoutEvent)} 
-              className="text-muted-foreground hover:bg-transparent hover:text-primary h-8 w-8"
-            >
-              <VolumeIcon className="w-4 h-4" />
-            </Button>
-            <Slider 
-              value={[volume]} 
-              max={100} 
-              step={1} 
-              onValueChange={handleVolumeChange} 
-              className="flex-1" 
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
+      {/* Volume Control Mobile (Custom Popover) */}
+      <Button 
+        ref={mobileVolumeTriggerRef}
+        size="icon" 
+        variant="ghost" 
+        className="md:hidden text-foreground hover:text-primary w-8 h-8 hover:bg-transparent" 
+        disabled={!isPlayerReady} 
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsVolumePopoverOpen(true);
+        }}
+      >
+        <VolumeIcon className="w-4 h-4" />
+      </Button>
       
       {/* Placeholder para manter o alinhamento no mobile */}
       <div className="hidden md:block w-8 h-8" /> 
@@ -348,6 +316,19 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           </div>
         </div>
       </Card>
+      
+      {/* Custom Volume Popover for Mobile */}
+      {isMobile && (
+        <VolumePopover
+          volume={volume}
+          isMuted={isMuted}
+          onVolumeChange={handleVolumeChange}
+          onToggleMute={toggleMuteWithoutEvent}
+          isOpen={isVolumePopoverOpen}
+          onClose={() => setIsVolumePopoverOpen(false)}
+          triggerRef={mobileVolumeTriggerRef}
+        />
+      )}
     </>
   );
 };
