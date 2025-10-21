@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference lib="deno.ns" />
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -26,15 +26,10 @@ const invidiousInstances = [
 // Function to search YouTube videos using Invidious API
 async function searchYouTube(query: string): Promise<SearchResult[]> {
   try {
-    console.log('Searching YouTube for:', query);
-    
     let results: SearchResult[] = [];
-    let lastError: Error | null = null;
     
     for (const instance of invidiousInstances) {
       try {
-        console.log(`Trying instance: ${instance}`);
-        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
@@ -52,7 +47,6 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
         
         if (response.ok) {
           const data = await response.json();
-          console.log(`Success with ${instance}, found ${data.length} results`);
           
           if (data && data.length > 0) {
             results = data.slice(0, 5).map((video: any) => ({
@@ -66,24 +60,18 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
             
             return results;
           }
-        } else {
-          console.log(`Instance ${instance} returned status: ${response.status}`);
         }
       } catch (err) {
-        lastError = err as Error;
-        console.log(`Failed with instance ${instance}:`, err instanceof Error ? err.message : 'Unknown error');
         continue;
       }
     }
     
     if (results.length === 0) {
-      console.error('All Invidious instances failed. Last error:', lastError);
       throw new Error('Não foi possível buscar músicas no momento. Tente novamente em alguns instantes.');
     }
     
     return results;
   } catch (error) {
-    console.error('Error searching YouTube:', error);
     throw error;
   }
 }
@@ -94,8 +82,6 @@ async function getDirectAudioUrl(videoId: string): Promise<string> {
 
   for (const instance of invidiousInstances) {
     try {
-      console.log(`Trying to get audio stream from ${instance} for video ${videoId}`);
-      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       
@@ -114,24 +100,21 @@ async function getDirectAudioUrl(videoId: string): Promise<string> {
       if (response.ok) {
         const data = await response.json();
         
-        // Find the best audio stream (mimeType includes 'audio' and quality is high)
+        // Find the best audio stream
         const audioStream = data.adaptiveFormats?.find((format: any) => 
           format.type.startsWith('audio/') && format.qualityLabel === null
         );
 
         if (audioStream && audioStream.url) {
-          console.log(`Found direct audio URL via ${instance}`);
           return audioStream.url;
         }
       }
     } catch (err) {
       lastError = err as Error;
-      console.log(`Failed to get audio stream from ${instance}:`, err instanceof Error ? err.message : 'Unknown error');
       continue;
     }
   }
 
-  console.error('Failed to find direct audio URL. Last error:', lastError);
   throw new Error('Não foi possível obter o link de áudio direto para download. Todas as fontes falharam.');
 }
 
@@ -146,40 +129,15 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const pathname = url.pathname;
 
-    // Stream endpoint - proxy YouTube audio directly
+    // Handle /stream endpoint (not used for offline download, but kept for completeness)
     if (pathname.includes('/stream')) {
-      const videoId = url.searchParams.get('videoId');
-      if (!videoId) {
-        return new Response(JSON.stringify({ error: 'Missing videoId' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      try {
-        console.log(`Stream request for video ${videoId}`);
-        
-        // Build YouTube embed player URL which allows direct streaming
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        
-        // Return redirect to YouTube (browsers can play this directly)
-        return new Response(JSON.stringify({ 
-          error: 'Please use the YouTube player URL',
-          playbackUrl: youtubeUrl 
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } catch (error) {
-        console.error('Error in /stream:', error);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to get stream', 
-          details: error instanceof Error ? error.message : 'Unknown error' 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
+      return new Response(JSON.stringify({ 
+        error: 'Please use the YouTube player URL',
+        playbackUrl: `https://www.youtube.com/watch?v=${url.searchParams.get('videoId')}`
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -208,7 +166,6 @@ Deno.serve(async (req) => {
     const { action, query, videoId } = await req.json();
 
     if (action === 'search') {
-      // Search for videos
       const results = await searchYouTube(query);
       
       return new Response(
@@ -216,7 +173,6 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (action === 'get_audio_url') {
-      // New action to get the direct audio URL for caching
       if (!videoId) {
         return new Response(
           JSON.stringify({ success: false, error: 'Missing videoId' }),
@@ -232,7 +188,6 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (error) {
-        // Captura o erro específico do getDirectAudioUrl
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao buscar link de áudio.';
         return new Response(
           JSON.stringify({ success: false, error: errorMessage }),
@@ -241,7 +196,7 @@ Deno.serve(async (req) => {
       }
       
     } else if (action === 'download') {
-      // Check if song already exists for this user
+      // Logic for saving song metadata to DB (already implemented)
       const { data: existingSong } = await supabase
         .from('songs')
         .select('*')
@@ -250,14 +205,12 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existingSong) {
-        console.log('Song already exists for user:', existingSong);
         return new Response(
           JSON.stringify({ success: true, song: existingSong }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Search to get video info/metadata
       const searchResults = await searchYouTube(videoId);
       
       if (!searchResults || searchResults.length === 0) {
@@ -265,8 +218,6 @@ Deno.serve(async (req) => {
       }
       
       const videoInfo = searchResults[0];
-      
-      // Store YouTube video ID - player will use YouTube iframe API
       const playbackUrl = `https://www.youtube.com/watch?v=${videoId}`;
       
       const { data: song, error } = await supabase
@@ -276,16 +227,14 @@ Deno.serve(async (req) => {
           artist: videoInfo.artist,
           duration: videoInfo.duration,
           thumbnail_url: videoInfo.thumbnail,
-          audio_url: playbackUrl, // Store YouTube URL
+          audio_url: playbackUrl,
           youtube_id: videoId,
-          user_id: user.id, // Associate with user
+          user_id: user.id,
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      console.log('Song saved successfully:', song);
 
       return new Response(
         JSON.stringify({ success: true, song }),
@@ -298,7 +247,6 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   } catch (error) {
-    console.error('Error in function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
