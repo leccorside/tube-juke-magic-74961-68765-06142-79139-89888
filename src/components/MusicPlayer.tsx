@@ -235,7 +235,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50 relative overflow-hidden">
+    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[999] relative overflow-hidden">
       
       {/* Equalizer Visualizer (Background) */}
       <VisualizerBars isPlaying={isPlaying} />
