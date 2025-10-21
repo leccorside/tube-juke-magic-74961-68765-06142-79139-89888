@@ -212,7 +212,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <header className="flex items-center justify-between">
               <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(false)}><ChevronDown className="w-6 h-6" /></Button>
               <div className="text-center"><p className="text-xs uppercase text-muted-foreground">Tocando agora</p><p className="font-semibold truncate">{currentSong.artist}</p></div>
-              <Button variant="ghost" size="icon"><MoreVertical className="w-6 h-6" /></Button>
+              {/* Botão MoreVertical removido daqui */}
+              <div className="w-6 h-6" /> {/* Placeholder para manter o alinhamento */}
             </header>
             <div className="flex-1 flex items-center justify-center my-8">
               <img src={currentSong.thumbnail_url} alt={currentSong.title} className="w-full max-w-xs md:max-w-sm aspect-square rounded-lg shadow-2xl shadow-black/50" />
