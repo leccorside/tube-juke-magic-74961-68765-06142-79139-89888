@@ -37,7 +37,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayerType | null>(null);
   
-  // Removido isFullScreen
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -173,10 +172,9 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         </Button>
       </div>
       
-      {/* Volume Control Mobile (Popover) */}
+      {/* Volume Control Mobile (Popover) - Integrado de volta */}
       <Popover>
         <PopoverTrigger asChild>
-          {/* Usamos e.stopPropagation() no PopoverTrigger para garantir que o clique não suba para o container principal (que não deve mais ter um onClick de tela cheia, mas é bom prevenir) */}
           <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
             <Volume2 className="w-4 h-4" />
           </Button>
@@ -222,8 +220,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             
             {/* Song Info */}
-            {/* Removido pl-10 pr-10 para mobile, pois o volume e o X estão absolutos */}
-            <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10">
               <img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" />
               <div className="min-w-0 text-left">
                 <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
