@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2, X, Loader2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, X, Loader2, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"; // Importando useMusicPlayer
 
 // YouTube Player States
 const YT_PLAYING = 1;
@@ -32,6 +33,9 @@ interface MusicPlayerProps {
 
 
 export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
+  // Context Hooks
+  const { isShuffling, toggleShuffle } = useMusicPlayer();
+  
   // Ref para o elemento de áudio HTML5 (usado pelo OfflineAudioPlayer)
   const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -287,6 +291,17 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           {/* Controls */}
           <div className="flex flex-col items-center gap-2 flex-1">
             <div className="flex items-center gap-2">
+              {/* Shuffle Button */}
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={toggleShuffle}
+                className={`text-foreground hover:text-primary ${isShuffling ? 'text-primary' : 'text-muted-foreground'}`}
+                disabled={!isPlayerReady}
+              >
+                <Shuffle className="w-5 h-5" />
+              </Button>
+              
               <Button
                 size="icon"
                 variant="ghost"
