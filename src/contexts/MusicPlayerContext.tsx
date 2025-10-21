@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 interface Song {
   id: string;
@@ -38,11 +38,11 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [playlist, setPlaylist] = useState<Song[]>([]);
   const [isShuffling, setIsShuffling] = useState(false);
 
-  const toggleShuffle = () => {
+  const toggleShuffle = useCallback(() => {
     setIsShuffling((prev) => !prev);
-  };
+  }, []);
 
-  const playNext = () => {
+  const playNext = useCallback(() => {
     if (playlist.length === 0) return;
 
     if (isShuffling && currentSong) {
@@ -63,9 +63,9 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setCurrentSong(playlist[0]);
     }
-  };
+  }, [playlist, isShuffling, currentSong]);
 
-  const playPrevious = () => {
+  const playPrevious = useCallback(() => {
     if (playlist.length === 0) return;
 
     if (isShuffling && currentSong) {
@@ -86,7 +86,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setCurrentSong(playlist[playlist.length - 1]);
     }
-  };
+  }, [playlist, isShuffling, currentSong]);
 
   return (
     <MusicPlayerContext.Provider
