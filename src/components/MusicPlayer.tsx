@@ -145,9 +145,19 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Função auxiliar para lidar com ações internas e impedir a propagação
   const handleAction = (e: React.MouseEvent, action?: () => void) => {
     e.stopPropagation();
     action?.();
+  };
+
+  // Função para abrir a tela cheia, garantindo que não seja acionada por controles internos
+  const handleOpenFullScreen = (e: React.MouseEvent) => {
+    // Verifica se o clique não foi interrompido por um controle interno
+    // Nota: Em React, e.stopPropagation() é suficiente para a maioria dos casos,
+    // mas para garantir que o clique no Popover/Slider não suba,
+    // garantimos que todos os controles internos chamem e.stopPropagation().
+    setIsFullScreen(true);
   };
 
   if (!currentSong) return null;
@@ -155,7 +165,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlayerReady = !isLoadingAudio;
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
-  const PlayerControls = ({ isFull = false }) => (
+  const PlayerControls = ({ isFull = false }: { isFull?: boolean }) => (
     <>
       <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
         <Shuffle className={isFull ? "w-6 h-6" : "w-4 h-4 md:w-5 md:h-5"} />
@@ -164,7 +174,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onPrevious)}>
           <SkipBack className={isFull ? "w-8 h-8" : "w-4 h-4 md:w-5 md:h-5"} />
         </Button>
-        <Button size="icon" onClick={togglePlay} className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isFull ? 'w-20 h-20' : 'w-10 h-10 md:w-12 md:h-12'}`} disabled={isPlaybackDisabled}>
+        <Button size="icon" onClick={(e) => handleAction(e, togglePlay)} className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isFull ? 'w-20 h-20' : 'w-10 h-10 md:w-12 md:h-12'}`} disabled={isPlaybackDisabled}>
           {isLoadingAudio || isPlaybackDisabled ? <Loader2 className={isFull ? "w-8 h-8 animate-spin" : "w-5 h-5 animate-spin"} /> : isPlaying ? <Pause className={`${isFull ? "w-8 h-8" : "w-5 h-5"} fill-current`} /> : <Play className={`${isFull ? "w-8 h-8" : "w-5 h-5"} fill-current`} />}
         </Button>
         <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onNext)}>
@@ -178,14 +188,23 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       ) : (
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
+            {/* Adicionado e.stopPropagation() no onClick do PopoverTrigger para mobile */}
+            <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => handleAction(e)}>
               <Volume2 className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-40 p-3 mb-2" side="top" align="end">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <Volume2 className="w-4 h-4 text-muted-foreground" />
-              <Slider value={[volume]} max={100} step={1} onValueChange={handleVolumeChange} className="flex-1" />
+              <Slider 
+                value={[volume]} 
+                max={100} 
+                step={1} 
+                onValueChange={handleVolumeChange} 
+                className="flex-1" 
+                // Adicionado e.stopPropagation() no onMouseDown para prevenir clique no Card
+                onMouseDown={(e) => e.stopPropagation()}
+              />
             </div>
           </PopoverContent>
         </Popover>
@@ -212,7 +231,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             <header className="flex items-center justify-between">
               <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(false)}><ChevronDown className="w-6 h-6" /></Button>
               <div className="text-center"><p className="text-xs uppercase text-muted-foreground">Tocando agora</p><p className="font-semibold truncate">{currentSong.artist}</p></div>
-              {/* Botão MoreVertical removido daqui */}
               <div className="w-6 h-6" /> {/* Placeholder para manter o alinhamento */}
             </header>
             <div className="flex-1 flex items-center justify-center my-8">
@@ -227,17 +245,70 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           </div>
         </div>
       ) : (
-        <Card onClick={() => setIsFullScreen(true)} className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden cursor-pointer animate-in slide-in-from-bottom duration-300">
+        <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden cursor-pointer animate-in slide-in-from-bottom duration-300">
           <VisualizerBars isPlaying={isPlaying} />
+          
+          {/* Botão de Fechar - Deve sempre usar handleAction para parar a propagação */}
           <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 left-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
-          <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
+          
+          {/* Conteúdo principal do Mini-Player - Clicável para abrir tela cheia */}
+          <div onClick={handleOpenFullScreen} className="container mx-auto px-4 py-3 md:py-4 relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:gap-4">
-              <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10"><img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" /><div className="min-w-0 text-left"><h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4><p className="text-xs md:text-sm text-muted-foreground truncate">{currentSong.artist} {isOfflineMode && <span className="ml-2 text-primary/80">(Offline)</span>}</p></div></div>
-              <div className="flex flex-col items-center gap-1 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
-                <div className="flex items-center gap-2"><PlayerControls /></div>
-                <div className="flex items-center gap-2 w-full max-w-md"><span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">{formatTime(currentTime)}</span><Slider value={[currentTime]} max={duration || 100} step={1} onValueChange={handleSeek} className="flex-1" disabled={!isPlayerReady} /><span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">{formatTime(duration)}</span></div>
+              
+              {/* Song Info */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10">
+                <img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" />
+                <div className="min-w-0 text-left">
+                  <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
+                  <p className="text-xs md:text-sm text-muted-foreground truncate">
+                    {currentSong.artist} 
+                    {isOfflineMode && <span className="ml-2 text-primary/80">(Offline)</span>}
+                  </p>
+                </div>
               </div>
-              <div className="hidden md:flex items-center gap-2 flex-1 justify-end order-2 md:order-none md:w-1/4"><Volume2 className="w-5 h-5 text-muted-foreground" /><Slider value={[volume]} max={100} step={1} onValueChange={handleVolumeChange} className="w-24" /></div>
+
+              {/* Controls & Progress (Middle section) */}
+              <div className="flex flex-col items-center gap-1 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
+                
+                {/* Control Buttons */}
+                <div className="flex items-center gap-2">
+                  <PlayerControls />
+                </div>
+
+                {/* Progress Bar */}
+                <div className="flex items-center gap-2 w-full max-w-md">
+                  <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
+                    {formatTime(currentTime)}
+                  </span>
+                  <Slider
+                    value={[currentTime]}
+                    max={duration || 100}
+                    step={1}
+                    onValueChange={handleSeek}
+                    className="flex-1"
+                    disabled={!isPlayerReady}
+                    // Parar propagação para não abrir tela cheia ao arrastar
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                  <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
+                    {formatTime(duration)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Volume (Desktop only) */}
+              <div className="hidden md:flex items-center gap-2 flex-1 justify-end order-2 md:order-none md:w-1/4" onClick={(e) => e.stopPropagation()}>
+                <Volume2 className="w-5 h-5 text-muted-foreground" />
+                <Slider
+                  value={[volume]}
+                  max={100}
+                  step={1}
+                  onValueChange={handleVolumeChange}
+                  className="w-24"
+                  // Parar propagação para não abrir tela cheia ao arrastar
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+              </div>
             </div>
           </div>
         </Card>
