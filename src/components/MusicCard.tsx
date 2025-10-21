@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext"; // Importando o hook do player
 
 interface MusicCardProps {
   id: string;
@@ -44,6 +45,7 @@ export const MusicCard = ({
   const [isOfflineAvailable, setIsOfflineAvailable] = useState(false);
   const isMobile = useIsMobile();
   const { downloadForOffline, removeOffline, isAvailableOffline, isOnline } = useOfflineMusic();
+  const { addToQueue } = useMusicPlayer(); // Usando a função addToQueue
 
   useEffect(() => {
     if (variant === 'library') {
@@ -76,6 +78,19 @@ export const MusicCard = ({
       }
     }
   };
+  
+  const handleAddToQueue = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToQueue({
+      id,
+      title,
+      artist: artist || 'Artista Desconhecido',
+      thumbnail_url: thumbnail,
+      audio_url: audioUrl || '',
+      duration,
+      youtube_id: youtubeId || '',
+    });
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -102,15 +117,25 @@ export const MusicCard = ({
         )}
         
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {/* Search variant: only download button */}
-          {variant === "search" && onDownload && !isDownloading && (
-            <div className="absolute inset-0 flex items-center justify-center">
+          
+          {/* Search variant: download and queue buttons */}
+          {variant === "search" && (
+            <div className="absolute inset-0 flex items-center justify-center gap-4">
+              {onDownload && !isDownloading && (
+                <Button
+                  size="icon"
+                  onClick={onDownload}
+                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
+                >
+                  <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> 
+                </Button>
+              )}
               <Button
                 size="icon"
-                onClick={onDownload}
-                className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
+                onClick={handleAddToQueue}
+                className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
               >
-                <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
+                <ListPlus className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
               </Button>
             </div>
           )}
@@ -133,6 +158,15 @@ export const MusicCard = ({
               
               {/* Other buttons on the right vertically */}
               <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex flex-col ${isMobile ? 'gap-1' : 'gap-2'}`}>
+                
+                {/* Add to Queue Button */}
+                <Button
+                  size="icon"
+                  onClick={handleAddToQueue}
+                  className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                >
+                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                </Button>
                 
                 {/* Offline Toggle Button */}
                 <Button

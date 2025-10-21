@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import { toast } from "sonner";
 
 interface Song {
   id: string;
@@ -19,6 +20,7 @@ interface MusicPlayerContextType {
   toggleShuffle: () => void;
   playNext: () => void;
   playPrevious: () => void;
+  addToQueue: (song: Song) => void; // Nova função
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -87,6 +89,26 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
       setCurrentSong(playlist[playlist.length - 1]);
     }
   }, [playlist, isShuffling, currentSong]);
+  
+  const addToQueue = useCallback((song: Song) => {
+    setPlaylist((prevPlaylist) => {
+      // Verifica se a música já está na playlist para evitar duplicatas imediatas
+      if (prevPlaylist.some(s => s.id === song.id)) {
+        toast.info(`${song.title} já está na fila.`);
+        return prevPlaylist;
+      }
+      
+      const newPlaylist = [...prevPlaylist, song];
+      
+      // Se não houver música tocando, começa a tocar esta
+      if (!currentSong) {
+        setCurrentSong(song);
+      }
+      
+      toast.success(`${song.title} adicionada à fila.`);
+      return newPlaylist;
+    });
+  }, [currentSong]);
 
   return (
     <MusicPlayerContext.Provider
@@ -99,6 +121,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
         toggleShuffle,
         playNext,
         playPrevious,
+        addToQueue, // Exportando a nova função
       }}
     >
       {children}
