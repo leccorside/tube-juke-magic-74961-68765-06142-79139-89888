@@ -107,13 +107,16 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     };
   }, [currentSong?.youtube_id, currentSong?.duration]);
 
-  // NEW: Attempt to play immediately when audioUrl is set
+  // Effect to handle playback when audioUrl is ready
   useEffect(() => {
-    if (audioRef.current && audioUrl) {
+    const audio = audioRef.current;
+    if (audio && audioUrl) {
       // Attempt to play immediately when the URL is available
-      audioRef.current.play().catch(err => {
-        console.warn('Autoplay attempt failed after URL load:', err);
-        // If it fails, ensure the state reflects paused
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.warn('Autoplay blocked. User interaction required:', err);
+        // If play fails, ensure the state reflects paused
         setIsPlaying(false);
       });
     }
@@ -231,7 +234,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         <audio
           ref={audioRef}
           src={audioUrl}
-          autoPlay={true} // Explicitly set autoplay
+          autoPlay={false} // Removed explicit autoplay here, relying on useEffect
           onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
           onDurationChange={(e) => {
             // Only update duration if it wasn't set from context (e.g., for offline songs)
@@ -245,17 +248,11 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             setIsPlaying(false);
             if (onNext) onNext();
           }}
-          onLoadedMetadata={(e) => {
-            // Attempt to play immediately after metadata loads
-            e.currentTarget.play().catch(err => {
-              console.warn('Autoplay blocked, user interaction needed:', err);
-              setIsPlaying(false); // Ensure button shows Play state
-            });
-          }}
           onError={(e) => {
             console.error('Audio playback error:', e);
             setIsLoadingAudio(false);
             setIsPlaying(false);
+            toast.error("Erro ao carregar áudio. Tente novamente.");
           }}
           style={{ display: 'none' }}
         />
