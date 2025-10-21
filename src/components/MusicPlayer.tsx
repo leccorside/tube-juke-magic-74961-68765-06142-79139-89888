@@ -233,7 +233,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
   const isPlaybackDisabled = !isOnline && !isOfflineMode;
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50">
+    <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-50 relative">
       
       {/* Player Components */}
       {isOfflineMode && offlinePlaybackUrl ? (
@@ -260,23 +260,23 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         />
       )}
       
+      {/* Close Button (Absolute position on mobile, hidden on desktop) */}
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={onClose}
+        className="absolute top-2 left-2 md:hidden text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-10"
+      >
+        <X className="w-4 h-4" />
+      </Button>
+
       <div className="container mx-auto px-4 py-3 md:py-4">
         
         {/* Mobile Layout: Song Info (Top) + Controls (Middle) + Progress (Bottom) */}
         <div className="flex flex-col md:flex-row md:items-center md:gap-4">
           
-          {/* Close Button (Mobile only, positioned left) */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-            className="absolute top-2 left-2 md:static text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 md:w-auto md:h-auto"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-
-          {/* Song Info (Always visible) */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0">
+          {/* Song Info (Adjusted padding for mobile close button) */}
+          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10 md:pl-0">
             <img
               src={currentSong.thumbnail_url || "/placeholder.svg"}
               alt={currentSong.title}
