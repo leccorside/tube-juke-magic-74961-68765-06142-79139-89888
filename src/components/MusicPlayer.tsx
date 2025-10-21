@@ -11,7 +11,7 @@ interface MusicPlayerProps {
     title: string;
     artist: string;
     thumbnail_url: string;
-    audio_url: string;
+    audio_url: string; // This is the YouTube URL
     youtube_id: string;
     duration?: number;
   } | null;
@@ -76,7 +76,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         }
       }
 
-      // 2. If not offline, get audio URL from edge function
+      // 2. If not offline, try to get audio URL from edge function
       if (!urlToPlay) {
         try {
           console.log('Fetching audio URL from edge function');
@@ -87,12 +87,20 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           if (error) throw error;
           if (!data?.audioUrl) throw new Error('No audio URL returned');
 
-          console.log('Using audio URL directly:', data.audioUrl);
+          console.log('Using audio URL directly from Edge:', data.audioUrl);
           urlToPlay = data.audioUrl;
         } catch (error: any) {
-          console.error('Error loading audio:', error);
-          toast.error("Erro ao carregar áudio: " + (error.message || "Falha na função Edge."));
-          urlToPlay = null; // Ensure URL is null on failure
+          console.error('Error loading audio from Edge:', error);
+          toast.error("Erro ao carregar áudio (Edge Function falhou). Tentando fallback...");
+          
+          // 3. Fallback: Use the stored YouTube URL directly
+          if (currentSong.audio_url.includes('youtube.com')) {
+            console.log('Using stored YouTube URL as fallback:', currentSong.audio_url);
+            urlToPlay = currentSong.audio_url;
+          } else {
+            toast.error("Falha total ao carregar áudio.");
+            urlToPlay = null;
+          }
         }
       }
       
@@ -108,7 +116,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [currentSong?.youtube_id, currentSong?.duration]);
+  }, [currentSong?.youtube_id, currentSong?.duration, currentSong?.audio_url]); // Added audio_url dependency
 
   // Effect to handle playback when audioUrl is ready
   useEffect(() => {
