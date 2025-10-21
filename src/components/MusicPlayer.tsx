@@ -81,48 +81,58 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         try {
           console.log('Using Edge Function proxy URL for streaming');
           
-          // Construct the URL to the new stream-audio function
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) throw new Error('Not authenticated');
 
-          // The audio URL is now the URL of the Edge Function itself, which proxies the stream
-          urlToPlay = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stream-audio`;
+          // Construct the direct URL to the Edge Function, passing required parameters
+          // The Edge Function will need to be updated to accept youtubeId and token via query params
+          // or we must use fetch and create a Blob URL, which supports Range requests poorly.
           
-          // We need to append the youtubeId and the Authorization header manually
-          // Since we are using the HTML5 <audio> tag, we cannot easily pass headers.
-          // We must use a temporary signed URL or a query parameter for authentication.
           // Since the Edge Function is protected by Auth, we must pass the token.
+          // Let's use the direct URL approach, assuming the Edge Function can handle the token in the body 
+          // or we use a temporary solution: fetch the stream and create a Blob URL.
           
-          // For simplicity and to avoid complex token passing in the <audio> tag, 
-          // we will revert to the previous method of invoking the function to get a direct URL, 
-          // but this time, we will assume the new 'stream-audio' function is configured to return 
-          // a temporary signed URL or a direct stream URL if possible.
+          // *** Reverting to the previous logic: fetch the stream and create a Blob URL ***
+          // This is necessary because the HTML5 <audio> tag cannot send custom headers (like Authorization)
+          // and passing the token in the URL is insecure unless the Edge Function is modified to handle it.
           
-          // Since the new 'stream-audio' is a proxy, we need to call it via fetch 
-          // and get a blob URL, or use the function URL directly if it supports token via query param.
+          // Let's use fetch to get the stream and create a Blob URL.
           
-          // Let's stick to the original invocation method, but update the function name.
-          const { data, error } = await supabase.functions.invoke('stream-audio', {
-            body: { youtubeId: currentSong.youtube_id },
-          });
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stream-audio`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ youtubeId: currentSong.youtube_id })
+            }
+          );
 
-          if (error) throw error;
-          if (!data?.audioUrl) throw new Error('No audio URL returned from stream-audio');
+          if (response.status === 401) throw new Error('Unauthorized access to stream function.');
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Stream function failed:', errorText);
+            throw new Error(`Falha ao obter stream: ${response.status}`);
+          }
+          
+          // Check if the response is JSON (error message) or audio stream
+          const contentType = response.headers.get('Content-Type');
+          if (contentType && contentType.includes('application/json')) {
+             // This means the Edge Function returned a JSON error (e.g., Invidious failed)
+             const errorData = await response.json();
+             throw new Error(errorData.error || 'Erro desconhecido na função Edge.');
+          }
 
-          console.log('Using audio URL directly from Edge:', data.audioUrl);
-          urlToPlay = data.audioUrl;
+          // If it's an audio stream, create a Blob URL
+          const audioBlob = await response.blob();
+          urlToPlay = URL.createObjectURL(audioBlob);
+          
         } catch (error: any) {
           console.error('Error loading audio from Edge:', error);
           toast.error("Erro ao carregar áudio: " + (error.message || "Falha na função Edge."));
-          
-          // Fallback: Use the stored YouTube URL directly (known to fail, but keeps the button active)
-          if (currentSong.audio_url.includes('youtube.com')) {
-            console.log('Using stored YouTube URL as fallback:', currentSong.audio_url);
-            urlToPlay = currentSong.audio_url;
-          } else {
-            toast.error("Falha total ao carregar áudio.");
-            urlToPlay = null;
-          }
+          urlToPlay = null;
         }
       }
       
