@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 
 interface OfflineAudioPlayerProps {
-  audioUrl: string;
+  audioUrl: string; // Este é o URL de cache (ex: /offline-audio-cache/...)
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
   onPlayStateChange: (isPlaying: boolean) => void;
@@ -35,6 +35,11 @@ export const OfflineAudioPlayer = forwardRef<HTMLAudioElement, OfflineAudioPlaye
     // Reset state when audioUrl changes
     setIsReady(false);
     onLoadingChange(true);
+    
+    // Se o audioUrl for um URL de cache, o navegador tentará carregá-lo.
+    // Se estiver offline, o Service Worker deve interceptar e servir o cache.
+    audio.src = audioUrl;
+    audio.load(); // Força o carregamento do novo src
 
     const handleLoadedMetadata = () => {
       setIsReady(true);
@@ -115,7 +120,7 @@ export const OfflineAudioPlayer = forwardRef<HTMLAudioElement, OfflineAudioPlaye
   return (
     <audio
       ref={audioRef}
-      src={audioUrl}
+      // Não definimos o src aqui, mas sim no useEffect para garantir que o load() seja chamado
       style={{ display: 'none' }}
     />
   );

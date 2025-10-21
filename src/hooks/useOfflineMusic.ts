@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 interface OfflineSong {
   id: string;
@@ -35,6 +36,7 @@ export const useOfflineMusic = () => {
           const url = new URL(request.url);
           const metadata = JSON.parse(url.searchParams.get('metadata') || '{}');
           
+          // O Content-Length pode não estar disponível se o recurso for de origem cruzada sem CORS adequado
           const size = response.headers.get('content-length') ? parseInt(response.headers.get('content-length')!) : 0;
           totalSize += size;
 
@@ -45,7 +47,7 @@ export const useOfflineMusic = () => {
               artist: metadata.artist || 'Artista Desconhecido',
               thumbnailUrl: metadata.thumbnailUrl || '/placeholder.svg',
               youtubeId: metadata.youtubeId,
-              audioUrl: metadata.audioUrl,
+              audioUrl: metadata.audioUrl, // Este é o URL de áudio direto
               audioSize: size,
             });
           }
@@ -103,6 +105,7 @@ export const useOfflineMusic = () => {
       });
 
       if (matchingRequest) {
+        // Retorna o URL de cache que contém o URL de áudio real nos metadados
         return matchingRequest.url;
       }
       return null;
@@ -128,47 +131,55 @@ export const useOfflineMusic = () => {
       return false;
     }
 
-    // Criamos um URL único para o cache, incluindo metadados como query params
-    const metadata = {
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      thumbnailUrl: song.thumbnail_url,
-      youtubeId: song.youtube_id,
-      audioUrl: song.audio_url,
-    };
-    
-    // ATENÇÃO: O audio_url é o URL do YouTube. O Service Worker precisa ser capaz de interceptar
-    // e armazenar o stream de áudio real, o que é altamente improvável.
-    // Para fins de demonstração da funcionalidade de cache, usaremos um URL de placeholder
-    // que inclui os metadados.
-    const cacheUrl = `/offline-audio-placeholder?id=${song.id}&metadata=${encodeURIComponent(JSON.stringify(metadata))}`;
-
-    const downloadToastId = toast.loading(`Baixando ${song.title}...`);
+    const downloadToastId = toast.loading(`Preparando download de ${song.title}...`);
 
     try {
-      // Simulação de download: Na vida real, você faria um fetch(song.audio_url)
-      // Aqui, vamos apenas armazenar o placeholder para que o hook saiba que existe.
-      // O Service Worker (configurado pelo VitePWA) deve ser capaz de lidar com o cache de recursos reais.
-      
-      // Se o audio_url fosse um link direto para o MP3, faríamos:
-      // const response = await fetch(song.audio_url);
-      // if (!response.ok) throw new Error('Falha ao buscar áudio');
-      
-      // Usando um Response vazio para simular o cache do metadado
-      const cache = await caches.open(CACHE_NAME);
-      const placeholderResponse = new Response(new Blob(['placeholder']), {
-        headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': '1024' } // Simula um tamanho pequeno
+      // 1. Chamar Edge Function para obter o URL de áudio direto
+      const { data: audioData, error: audioError } = await supabase.functions.invoke("search-and-download", {
+        body: { action: "get_audio_url", videoId: song.youtube_id },
       });
       
-      await cache.put(cacheUrl, placeholderResponse);
+      if (audioError || !audioData.success || !audioData.audioUrl) {
+        throw new Error(audioError?.message || audioData.error || 'Falha ao obter link de áudio.');
+      }
+      
+      const directAudioUrl = audioData.audioUrl;
+      
+      toast.loading(`Baixando ${song.title}...`, { id: downloadToastId });
+
+      // 2. Fazer o fetch do áudio real
+      const response = await fetch(directAudioUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Falha ao buscar áudio: ${response.statusText}`);
+      }
+      
+      // 3. Criar URL de cache com metadados
+      const metadata = {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        thumbnailUrl: song.thumbnail_url,
+        youtubeId: song.youtube_id,
+        audioUrl: directAudioUrl, // Armazenamos o URL de áudio direto
+      };
+      
+      // Usamos um URL de cache único que contém os metadados
+      const cacheUrl = `/offline-audio-cache/${song.id}?metadata=${encodeURIComponent(JSON.stringify(metadata))}`;
+
+      // 4. Armazenar no Cache API
+      const cache = await caches.open(CACHE_NAME);
+      
+      // Clonamos a resposta para poder usá-la no cache
+      await cache.put(cacheUrl, response.clone());
 
       toast.success(`${song.title} baixada para offline!`, { id: downloadToastId });
       refreshOfflineSongs();
       return true;
     } catch (error) {
       console.error('Download offline failed:', error);
-      toast.error('Falha ao baixar música para offline. Verifique a conexão.', { id: downloadToastId });
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Falha ao baixar música para offline: ${errorMessage}`, { id: downloadToastId });
       return false;
     }
   };
@@ -180,6 +191,7 @@ export const useOfflineMusic = () => {
       const cache = await caches.open(CACHE_NAME);
       const keys = await cache.keys();
       
+      // Encontra a Request que corresponde ao songId
       const matchingRequest = keys.find(req => {
         const url = new URL(req.url);
         const metadata = JSON.parse(url.searchParams.get('metadata') || '{}');

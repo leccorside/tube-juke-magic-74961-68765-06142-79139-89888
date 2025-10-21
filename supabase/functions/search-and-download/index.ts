@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -13,19 +14,19 @@ interface SearchResult {
   duration: number;
 }
 
+const invidiousInstances = [
+  'https://yewtu.be',
+  'https://inv.us.projectsegfau.lt',
+  'https://y.com.sb',
+  'https://invidious.io.lol',
+  'https://iv.ggtyler.dev',
+  'https://invidious.epicsite.xyz',
+];
+
 // Function to search YouTube videos using Invidious API
 async function searchYouTube(query: string): Promise<SearchResult[]> {
   try {
     console.log('Searching YouTube for:', query);
-    
-    const invidiousInstances = [
-      'https://yewtu.be',
-      'https://inv.us.projectsegfau.lt',
-      'https://y.com.sb',
-      'https://invidious.io.lol',
-      'https://iv.ggtyler.dev',
-      'https://invidious.epicsite.xyz',
-    ];
     
     let results: SearchResult[] = [];
     let lastError: Error | null = null;
@@ -86,6 +87,54 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
     throw error;
   }
 }
+
+// Function to get the direct audio URL for a video ID
+async function getDirectAudioUrl(videoId: string): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (const instance of invidiousInstances) {
+    try {
+      console.log(`Trying to get audio stream from ${instance} for video ${videoId}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch(
+        `${instance}/api/v1/videos/${videoId}`,
+        { 
+          headers: { 
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          },
+          signal: controller.signal
+        }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Find the best audio stream (mimeType includes 'audio' and quality is high)
+        const audioStream = data.adaptiveFormats?.find((format: any) => 
+          format.type.startsWith('audio/') && format.qualityLabel === null
+        );
+
+        if (audioStream && audioStream.url) {
+          console.log(`Found direct audio URL via ${instance}`);
+          return audioStream.url;
+        }
+      }
+    } catch (err) {
+      lastError = err as Error;
+      console.log(`Failed to get audio stream from ${instance}:`, err instanceof Error ? err.message : 'Unknown error');
+      continue;
+    }
+  }
+
+  console.error('Failed to find direct audio URL. Last error:', lastError);
+  throw new Error('Não foi possível obter o link de áudio direto para download.');
+}
+
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -166,6 +215,22 @@ Deno.serve(async (req) => {
         JSON.stringify({ success: true, results }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    } else if (action === 'get_audio_url') {
+      // New action to get the direct audio URL for caching
+      if (!videoId) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Missing videoId' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      const directAudioUrl = await getDirectAudioUrl(videoId);
+      
+      return new Response(
+        JSON.stringify({ success: true, audioUrl: directAudioUrl }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+      
     } else if (action === 'download') {
       // Check if song already exists for this user
       const { data: existingSong } = await supabase
