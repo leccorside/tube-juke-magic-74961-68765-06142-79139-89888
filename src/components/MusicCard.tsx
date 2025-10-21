@@ -118,26 +118,19 @@ export const MusicCard = ({
         
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           
-          {/* Search variant: download and queue buttons */}
+          {/* Search variant: download button only */}
           {variant === "search" && (
             <div className="absolute inset-0 flex items-center justify-center gap-4">
-              {/* Botão de Download (Adicionar à Biblioteca) - VISÍVEL */}
               {onDownload && !isDownloading && (
                 <Button
                   size="icon"
                   onClick={onDownload}
-                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
+                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
                 >
-                  <Download className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> 
+                  <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
                 </Button>
               )}
-              <Button
-                size="icon"
-                onClick={handleAddToQueue}
-                className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
-              >
-                <ListMusic className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
-              </Button>
+              {/* Botão Adicionar à Fila removido dos resultados de busca */}
             </div>
           )}
           
@@ -170,7 +163,6 @@ export const MusicCard = ({
                 </Button>
                 
                 {/* Offline Toggle Button (Download Oculto) */}
-                {/* Ocultado conforme solicitado */}
                 {/* <Button
                   size="icon"
                   onClick={handleToggleOffline}
