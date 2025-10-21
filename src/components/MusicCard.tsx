@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play, Trash2, Heart, ListPlus, Download, Loader2, CheckCircle2 } from "lucide-react";
+import { Play, Trash2, Heart, ListPlus, Download, Loader2, CheckCircle2, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
@@ -135,7 +135,7 @@ export const MusicCard = ({
                 onClick={handleAddToQueue}
                 className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-10 h-10' : 'w-12 h-12'} shadow-lg`}
               >
-                <ListPlus className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
+                <ListMusic className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} /> {/* Alterado para ListMusic */}
               </Button>
             </div>
           )}
@@ -165,7 +165,7 @@ export const MusicCard = ({
                   onClick={handleAddToQueue}
                   className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> {/* Alterado para ListMusic */}
                 </Button>
                 
                 {/* Offline Toggle Button */}
@@ -184,12 +184,13 @@ export const MusicCard = ({
                   )}
                 </Button>
 
+                {/* Add to Playlist Dialog Button */}
                 <Button
                   size="icon"
                   onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
                   className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
                 >
-                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> {/* Mantido ListPlus */}
                 </Button>
                 {onToggleFavorite && (
                   <Button
