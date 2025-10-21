@@ -10,7 +10,7 @@ import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import VisualizerBars from "./VisualizerBars";
+// import VisualizerBars from "./VisualizerBars"; // Removido
 
 const YT_PLAYING = 1;
 const YT_PAUSED = 2;
@@ -184,7 +184,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       ) : (
         <Popover>
           <PopoverTrigger asChild>
-            {/* CORREÇÃO: Usar e.stopPropagation() diretamente no onClick do botão para permitir que o Popover funcione, mas impeça a abertura da tela cheia. */}
             <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
               <Volume2 className="w-4 h-4" />
             </Button>
@@ -198,7 +197,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 step={1} 
                 onValueChange={handleVolumeChange} 
                 className="flex-1" 
-                // Parar propagação para prevenir clique no Card (embora o Popover já ajude)
                 onMouseDown={(e) => e.stopPropagation()}
               />
             </div>
@@ -242,7 +240,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         </div>
       ) : (
         <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden cursor-pointer animate-in slide-in-from-bottom duration-300">
-          <VisualizerBars isPlaying={isPlaying} />
+          {/* VisualizerBars removido daqui */}
           
           {/* Botão de Fechar - Deve sempre usar handleAction para parar a propagação */}
           <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 left-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
