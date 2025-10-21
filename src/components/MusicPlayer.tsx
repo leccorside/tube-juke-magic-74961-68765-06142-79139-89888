@@ -152,17 +152,35 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
   const PlayerControls = () => (
     <>
-      <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={(e) => handleAction(e, toggleShuffle)} 
+        className={`
+          ${isShuffling ? 'text-primary' : 'text-muted-foreground'} 
+          hover:bg-transparent hover:text-primary
+        `}
+      >
         <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
       <div className="flex items-center z-30"> {/* Z-INDEX AUMENTADO */}
-        <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onPrevious)}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={(e) => handleAction(e, onPrevious)}
+          className="hover:bg-transparent hover:text-primary"
+        >
           <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
         <Button size="icon" onClick={(e) => handleAction(e, togglePlay)} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 md:w-12 md:h-12" disabled={isPlaybackDisabled}>
           {isLoadingAudio || isPlaybackDisabled ? <Loader2 className="w-5 h-5 animate-spin" /> : isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
         </Button>
-        <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onNext)}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={(e) => handleAction(e, onNext)}
+          className="hover:bg-transparent hover:text-primary"
+        >
           <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
       </div>
@@ -170,7 +188,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       {/* Volume Control Mobile (Popover) */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="md:hidden text-foreground hover:text-primary w-8 h-8 hover:bg-transparent" 
+            disabled={!isPlayerReady} 
+            onClick={(e) => e.stopPropagation()}
+          >
             <Volume2 className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
@@ -208,7 +232,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden animate-in slide-in-from-bottom duration-300">
         
         {/* Botão de Fechar (X) - Mantendo z-index alto */}
-        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 right-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-30"><X className="w-4 h-4" /></Button>
+        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 right-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-30 hover:bg-transparent hover:text-primary"><X className="w-4 h-4" /></Button>
         
         {/* Conteúdo principal do Mini-Player */}
         <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
