@@ -38,10 +38,6 @@ export default function SharedPlaylist() {
   const [songs, setSongs] = useState<PlaylistSong[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
-  useEffect(() => {
-    console.log(`SharedPlaylist component loaded for ID: ${id}`);
-  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -65,9 +61,15 @@ export default function SharedPlaylist() {
         .from("playlists")
         .select("name, user_id")
         .eq("id", id)
-        .single();
+        .maybeSingle(); // <-- Usando maybeSingle
 
       if (playlistError) throw playlistError;
+      
+      if (!playlistData) {
+        // Se não houver dados, a playlist não existe
+        throw new Error("Playlist não encontrada ou ID inválido.");
+      }
+      
       setPlaylistName(playlistData.name);
       setPlaylistOwnerId(playlistData.user_id);
 
@@ -94,7 +96,7 @@ export default function SharedPlaylist() {
       setSongs(songsData || []);
     } catch (error: any) {
       toast.error("Erro ao carregar playlist compartilhada: " + error.message);
-      // Se falhar, navegamos para a home, não para /playlists, pois o usuário pode não estar logado
+      // Se falhar, navegamos para a home, pois o usuário pode não estar logado
       navigate("/", { replace: true }); 
     } finally {
       setIsLoading(false);
