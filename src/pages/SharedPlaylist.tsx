@@ -38,6 +38,10 @@ export default function SharedPlaylist() {
   const [songs, setSongs] = useState<PlaylistSong[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  
+  useEffect(() => {
+    console.log(`SharedPlaylist component loaded for ID: ${id}`);
+  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -90,7 +94,8 @@ export default function SharedPlaylist() {
       setSongs(songsData || []);
     } catch (error: any) {
       toast.error("Erro ao carregar playlist compartilhada: " + error.message);
-      navigate("/playlists", { replace: true });
+      // Se falhar, navegamos para a home, não para /playlists, pois o usuário pode não estar logado
+      navigate("/", { replace: true }); 
     } finally {
       setIsLoading(false);
     }
