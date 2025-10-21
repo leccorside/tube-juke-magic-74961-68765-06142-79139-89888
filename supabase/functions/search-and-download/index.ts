@@ -21,6 +21,9 @@ const invidiousInstances = [
   'https://invidious.io.lol',
   'https://iv.ggtyler.dev',
   'https://invidious.epicsite.xyz',
+  'https://invidious.projectsegfau.lt', // Novo
+  'https://vid.puffyan.us', // Novo
+  'https://invidious.snopyta.org', // Novo
 ];
 
 // Function to search YouTube videos using Invidious API

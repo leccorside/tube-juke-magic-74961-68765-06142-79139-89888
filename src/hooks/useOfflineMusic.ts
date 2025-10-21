@@ -149,14 +149,16 @@ export const useOfflineMusic = () => {
       });
       
       if (audioError) {
+        // Se o erro for de comunicação (non-2xx), pode ser problema de autenticação ou Edge Function
         const errorMessage = audioError.message.includes('non-2xx status code') 
-          ? 'Falha na comunicação com o servidor. Verifique se você está logado.'
+          ? 'Falha na comunicação com o servidor. Tente novamente.'
           : audioError.message;
         throw new Error(errorMessage);
       }
       
       if (!audioData.success || !audioData.audioUrl) {
-        throw new Error(audioData.error || 'Falha ao obter link de áudio.');
+        // Se a Edge Function retornou sucesso: false, o erro está no corpo da resposta
+        throw new Error(audioData.error || 'Falha ao obter link de áudio. O YouTube pode ter bloqueado a fonte.');
       }
       
       const directAudioUrl = audioData.audioUrl;
