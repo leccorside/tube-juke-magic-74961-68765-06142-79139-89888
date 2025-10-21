@@ -260,61 +260,66 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         />
       )}
       
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center gap-4">
-          {/* Close Button */}
+      <div className="container mx-auto px-4 py-3 md:py-4">
+        
+        {/* Mobile Layout: Song Info (Top) + Controls (Middle) + Progress (Bottom) */}
+        <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+          
+          {/* Close Button (Mobile only, positioned left) */}
           <Button
             size="icon"
             variant="ghost"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground shrink-0"
+            className="absolute top-2 left-2 md:static text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 md:w-auto md:h-auto"
           >
             <X className="w-4 h-4" />
           </Button>
 
-          {/* Song Info */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Song Info (Always visible) */}
+          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0">
             <img
               src={currentSong.thumbnail_url || "/placeholder.svg"}
               alt={currentSong.title}
-              className="w-14 h-14 rounded-full object-cover shadow-lg"
+              className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg"
             />
-            <div className="min-w-0">
-              <h4 className="font-semibold text-foreground truncate">{currentSong.title}</h4>
-              <p className="text-sm text-muted-foreground truncate">
+            <div className="min-w-0 text-center md:text-left">
+              <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
+              <p className="text-xs md:text-sm text-muted-foreground truncate">
                 {currentSong.artist} 
                 {isOfflineMode && <span className="ml-2 text-primary/80">(Offline)</span>}
               </p>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col items-center gap-2 flex-1">
+          {/* Controls & Progress (Middle section) */}
+          <div className="flex flex-col items-center gap-1 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
+            
+            {/* Control Buttons */}
             <div className="flex items-center gap-2">
               {/* Shuffle Button */}
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={toggleShuffle}
-                className={`text-foreground hover:text-primary ${isShuffling ? 'text-primary' : 'text-muted-foreground'}`}
+                className={`text-foreground hover:text-primary ${isShuffling ? 'text-primary' : 'text-muted-foreground'} w-8 h-8 md:w-10 md:h-10`}
                 disabled={!isPlayerReady}
               >
-                <Shuffle className="w-5 h-5" />
+                <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
               
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={onPrevious}
-                className="text-foreground hover:text-primary"
+                className="text-foreground hover:text-primary w-8 h-8 md:w-10 md:h-10"
                 disabled={!isPlayerReady}
               >
-                <SkipBack className="w-5 h-5" />
+                <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
               <Button
                 size="icon"
                 onClick={togglePlay}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 md:w-12 md:h-12"
                 disabled={isPlaybackDisabled}
               >
                 {isLoadingAudio || isPlaybackDisabled ? (
@@ -329,16 +334,16 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 size="icon"
                 variant="ghost"
                 onClick={onNext}
-                className="text-foreground hover:text-primary"
+                className="text-foreground hover:text-primary w-8 h-8 md:w-10 md:h-10"
                 disabled={!isPlayerReady}
               >
-                <SkipForward className="w-5 h-5" />
+                <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
             </div>
 
             {/* Progress Bar */}
             <div className="flex items-center gap-2 w-full max-w-md">
-              <span className="text-xs text-muted-foreground min-w-[40px]">
+              <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
                 {formatTime(currentTime)}
               </span>
               <Slider
@@ -349,14 +354,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
                 className="flex-1"
                 disabled={!isPlayerReady}
               />
-              <span className="text-xs text-muted-foreground min-w-[40px]">
+              <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
                 {formatTime(duration)}
               </span>
             </div>
           </div>
 
-          {/* Volume */}
-          <div className="flex items-center gap-2 flex-1 justify-end">
+          {/* Volume (Desktop only) */}
+          <div className="hidden md:flex items-center gap-2 flex-1 justify-end order-2 md:order-none md:w-1/4">
             <Volume2 className="w-5 h-5 text-muted-foreground" />
             <Slider
               value={[volume]}
