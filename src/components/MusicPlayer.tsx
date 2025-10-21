@@ -155,7 +155,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, toggleShuffle)} className={isShuffling ? 'text-primary' : 'text-muted-foreground'}>
         <Shuffle className="w-4 h-4 md:w-5 md:h-5" />
       </Button>
-      <div className="flex items-center z-10"> {/* Adicionando z-10 aqui */}
+      <div className="flex items-center z-10">
         <Button variant="ghost" size="icon" onClick={(e) => handleAction(e, onPrevious)}>
           <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
@@ -167,7 +167,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         </Button>
       </div>
       
-      {/* Volume Control Mobile (Popover) - Integrado de volta */}
+      {/* Volume Control Mobile (Popover) */}
       <Popover>
         <PopoverTrigger asChild>
           <Button size="icon" variant="ghost" className="md:hidden text-foreground hover:text-primary w-8 h-8" disabled={!isPlayerReady} onClick={(e) => e.stopPropagation()}>
@@ -189,7 +189,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         </PopoverContent>
       </Popover>
       
-      {/* Placeholder para manter o alinhamento no mobile, se necessário, mas vamos tentar sem ele primeiro */}
+      {/* Placeholder para manter o alinhamento no mobile */}
       <div className="hidden md:block w-8 h-8" /> 
     </>
   );
@@ -207,15 +207,25 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
 
       <Card className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-card to-secondary border-t border-border backdrop-blur-lg shadow-2xl z-[99] overflow-hidden animate-in slide-in-from-bottom duration-300">
         
+        {/* 1. Progress Bar (Full Width at Top) */}
+        <div className="w-full h-2 px-4 pt-2 md:px-6 md:pt-3 relative z-20">
+          <PlayerProgress
+            currentTime={currentTime}
+            duration={duration}
+            isPlayerReady={isPlayerReady}
+            handleSeek={handleSeek}
+          />
+        </div>
+        
         {/* Botão de Fechar (X) - Mantido para fechar o player */}
-        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-2 left-2 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
+        <Button size="icon" variant="ghost" onClick={(e) => handleAction(e, onClose)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground shrink-0 w-8 h-8 z-20"><X className="w-4 h-4" /></Button>
         
         {/* Conteúdo principal do Mini-Player */}
         <div className="container mx-auto px-4 py-3 md:py-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
             
             {/* Song Info */}
-            <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0 pl-10">
+            <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-1/4 order-1 md:order-none mt-2 md:mt-0">
               <img src={currentSong.thumbnail_url || "/placeholder.svg"} alt={currentSong.title} className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg" />
               <div className="min-w-0 text-left">
                 <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
@@ -226,21 +236,15 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               </div>
             </div>
 
-            {/* Controls & Progress (Middle section) */}
+            {/* Controls (Middle section) */}
             <div className="flex flex-col items-center gap-4 md:gap-2 flex-1 order-3 md:order-none w-full md:w-1/2">
               
               {/* Control Buttons */}
-              <div className="flex items-center gap-2 z-10"> {/* Adicionando z-10 aqui */}
+              <div className="flex items-center gap-2 z-10">
                 <PlayerControls />
               </div>
-
-              {/* Progress Bar (Usando o novo componente) */}
-              <PlayerProgress
-                currentTime={currentTime}
-                duration={duration}
-                isPlayerReady={isPlayerReady}
-                handleSeek={handleSeek}
-              />
+              
+              {/* Removida a barra de progresso daqui */}
             </div>
 
             {/* Volume (Desktop only) */}

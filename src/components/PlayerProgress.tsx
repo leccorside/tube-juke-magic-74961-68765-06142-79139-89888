@@ -21,8 +21,8 @@ export const PlayerProgress: React.FC<PlayerProgressProps> = React.memo(({
   handleSeek,
 }) => {
   return (
-    <div className="flex items-center gap-2 w-full max-w-md">
-      <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
+    <div className="flex items-center gap-2 w-full">
+      <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px] hidden md:block">
         {formatTime(currentTime)}
       </span>
       <Slider
@@ -35,7 +35,7 @@ export const PlayerProgress: React.FC<PlayerProgressProps> = React.memo(({
         // Parar propagação para evitar conflitos de toque
         onMouseDown={(e) => e.stopPropagation()}
       />
-      <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px]">
+      <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px] hidden md:block">
         {formatTime(duration)}
       </span>
     </div>
