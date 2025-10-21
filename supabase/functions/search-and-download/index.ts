@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import ytdl from 'https://esm.sh/ytdl-core@4.11.5'; // Usando ytdl-core para extração direta
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +15,7 @@ interface SearchResult {
   duration: number;
 }
 
-// Lista de instâncias Invidious mais confiáveis
+// Lista de instâncias Invidious mais confiáveis (mantidas apenas para a busca inicial)
 const invidiousInstances = [
   'https://invidious.projectsegfau.lt',
   'https://vid.puffyan.us',
@@ -77,46 +78,26 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
   }
 }
 
-// Function to get the direct audio URL for a video ID
+// Function to get the direct audio URL for a video ID using ytdl-core
 async function getDirectAudioUrl(videoId: string): Promise<string> {
-  let lastError: Error | null = null;
+  try {
+    const info = await ytdl.getInfo(videoId);
+    
+    // Filtra para encontrar o melhor formato de áudio (apenas áudio, sem vídeo)
+    const audioFormat = ytdl.chooseFormat(info.formats, { 
+      quality: 'highestaudio', 
+      filter: 'audioonly' 
+    });
 
-  for (const instance of invidiousInstances) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
-      const response = await fetch(
-        `${instance}/api/v1/videos/${videoId}`,
-        { 
-          headers: { 
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          },
-          signal: controller.signal
-        }
-      );
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Find the best audio stream
-        const audioStream = data.adaptiveFormats?.find((format: any) => 
-          format.type.startsWith('audio/') && format.qualityLabel === null
-        );
-
-        if (audioStream && audioStream.url) {
-          return audioStream.url;
-        }
-      }
-    } catch (err) {
-      lastError = err as Error;
-      continue;
+    if (audioFormat && audioFormat.url) {
+      return audioFormat.url;
     }
-  }
 
-  throw new Error('Não foi possível obter o link de áudio direto para download. Todas as fontes falharam.');
+    throw new Error('Nenhum formato de áudio compatível encontrado.');
+  } catch (error) {
+    console.error('ytdl error:', error);
+    throw new Error('Falha ao extrair link de áudio direto do YouTube. O vídeo pode estar indisponível ou restrito.');
+  }
 }
 
 
