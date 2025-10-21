@@ -1,67 +1,17 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wifi, WifiOff, Trash2 } from "lucide-react";
+import { ArrowLeft, Wifi, WifiOff, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MusicCard } from "@/components/MusicCard";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
-import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Offline = () => {
   const navigate = useNavigate();
-  const { offlineSongs, isOnline, totalCacheSize, removeOffline, clearAllOffline, refreshOfflineSongs } = useOfflineMusic();
+  const { isOnline } = useOfflineMusic();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
 
-  useEffect(() => {
-    refreshOfflineSongs();
-  }, []);
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const handlePlay = (song: typeof offlineSongs[0]) => {
-    // Note: duration is set to 0 here, but the MusicPlayer will try to get the actual duration 
-    // from the audio file metadata once loaded.
-    const currentSongData = {
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      thumbnail_url: song.thumbnailUrl,
-      audio_url: '', // Not used for offline, MusicPlayer handles fetching via youtube_id
-      youtube_id: song.youtubeId,
-      duration: 0,
-    };
-    
-    setCurrentSong(currentSongData);
-    
-    const playlist = offlineSongs.map(s => ({
-      id: s.id,
-      title: s.title,
-      artist: s.artist,
-      thumbnail_url: s.thumbnailUrl,
-      audio_url: '',
-      youtube_id: s.youtubeId,
-      duration: 0,
-    }));
-    
-    setPlaylist(playlist);
-  };
-
-  const handleDelete = async (youtubeId: string) => {
-    await removeOffline(youtubeId);
-  };
-
-  const handleClearAll = async () => {
-    if (confirm('Tem certeza que deseja limpar todo o cache offline?')) {
-      await clearAllOffline();
-    }
-  };
+  // Since offline music functionality is disabled, we show a message.
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-secondary/20 to-background pb-24">
@@ -96,55 +46,30 @@ const Offline = () => {
             <div>
               <h2 className="text-2xl font-bold mb-2">Músicas Offline</h2>
               <p className="text-muted-foreground">
-                {offlineSongs.length} {offlineSongs.length === 1 ? 'música' : 'músicas'} disponíveis
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Espaço usado: {formatBytes(totalCacheSize)}
+                Recurso temporariamente indisponível
               </p>
             </div>
-            
-            {offlineSongs.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={handleClearAll}
-                className="gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Limpar Cache
-              </Button>
-            )}
           </div>
         </Card>
 
-        {offlineSongs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <WifiOff className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Nenhuma música offline</h3>
-            <p className="text-muted-foreground mb-4">
-              Baixe músicas para ouvi-las sem conexão com a internet
-            </p>
-            <Button onClick={() => navigate("/")}>
-              Ir para Biblioteca
-            </Button>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {offlineSongs.map((song) => (
-              <MusicCard
-                key={song.id}
-                id={song.id}
-                title={song.title}
-                artist={song.artist}
-                thumbnail={song.thumbnailUrl}
-                duration={0}
-                youtubeId={song.youtubeId}
-                onPlay={() => handlePlay(song)}
-                onDelete={() => handleDelete(song.youtubeId)}
-                variant="library"
-              />
-            ))}
-          </div>
-        )}
+        <Alert variant="destructive" className="mb-8">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Funcionalidade Desativada</AlertTitle>
+          <AlertDescription>
+            Devido a um erro de infraestrutura persistente no servidor, o recurso de download e reprodução de músicas offline foi temporariamente desativado.
+          </AlertDescription>
+        </Alert>
+
+        <Card className="p-12 text-center">
+          <WifiOff className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-xl font-semibold mb-2">Recurso Offline Indisponível</h3>
+          <p className="text-muted-foreground mb-4">
+            Aguarde a correção do problema de infraestrutura para reativar o download de músicas.
+          </p>
+          <Button onClick={() => navigate("/")}>
+            Ir para Biblioteca
+          </Button>
+        </Card>
       </div>
     </div>
   );
