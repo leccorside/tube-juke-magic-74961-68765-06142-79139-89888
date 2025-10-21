@@ -9,6 +9,7 @@ import { YouTubePlayer as YouTubePlayerType } from 'react-youtube';
 import { OfflineAudioPlayer } from "./OfflineAudioPlayer";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext"; // Importando useMusicPlayer
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Importando Popover
 
 // YouTube Player States
 const YT_PLAYING = 1;
@@ -282,7 +283,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               alt={currentSong.title}
               className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg"
             />
-            <div className="min-w-0 text-left"> {/* Alterado de text-center para text-left */}
+            <div className="min-w-0 text-left">
               <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
               <p className="text-xs md:text-sm text-muted-foreground truncate">
                 {currentSong.artist} 
@@ -339,6 +340,32 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               >
                 <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
+              
+              {/* Volume Control (Mobile Popover / Desktop Hidden) */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="md:hidden text-foreground hover:text-primary w-8 h-8"
+                    disabled={!isPlayerReady}
+                  >
+                    <Volume2 className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40 p-3 mb-2" side="top" align="end">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="w-4 h-4 text-muted-foreground" />
+                    <Slider
+                      value={[volume]}
+                      max={100}
+                      step={1}
+                      onValueChange={handleVolumeChange}
+                      className="flex-1"
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Progress Bar */}
