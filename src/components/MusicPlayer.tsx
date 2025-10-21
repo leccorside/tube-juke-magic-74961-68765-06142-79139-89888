@@ -241,7 +241,12 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-3 mb-2 z-[100]" side="top" align="end">
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {/* Adicionando onPointerDown para capturar eventos de toque/mouse antes do Radix */}
+          <div 
+            className="flex items-center gap-2" 
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             {/* Adicionando o botão de Mute/Unmute dentro do Popover para mobile */}
             <Button 
               size="icon" 
@@ -259,7 +264,6 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               onValueChange={handleVolumeChange} 
               className="flex-1" 
               onMouseDown={(e) => e.stopPropagation()}
-              // Adicionando onClick para garantir que o Popover não feche ao interagir com o Slider
               onClick={(e) => e.stopPropagation()}
             />
           </div>
