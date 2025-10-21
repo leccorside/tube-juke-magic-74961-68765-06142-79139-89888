@@ -76,12 +76,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         }
       }
 
-      // 2. If not offline, fetch the direct stream URL from the Edge Function
+      // 2. If not offline, fetch the direct stream URL from the existing 'download-audio' Edge Function
       if (!urlToPlay) {
         try {
-          console.log('Invoking Edge Function to get stream URL');
+          console.log('Invoking Edge Function (download-audio) to get stream URL');
           
-          const { data, error } = await supabase.functions.invoke("stream-audio", {
+          // We use fetch here instead of supabase.functions.invoke because download-audio
+          // is designed to return the audio stream URL directly, not proxy the stream.
+          const { data, error } = await supabase.functions.invoke("download-audio", {
             body: { youtubeId: currentSong.youtube_id },
           });
 
