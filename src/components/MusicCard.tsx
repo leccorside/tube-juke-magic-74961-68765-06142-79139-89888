@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play, Trash2, Heart, ListPlus } from "lucide-react";
+import { Play, Trash2, Heart, ListPlus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
@@ -74,8 +74,7 @@ export const MusicCard = ({
                 onClick={onDownload}
                 className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
               >
-                {/* Download component is not imported, but we keep the logic for library download */}
-                <div className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
+                <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
               </Button>
             </div>
           )}
