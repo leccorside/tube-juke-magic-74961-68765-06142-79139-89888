@@ -4,8 +4,11 @@ import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 
 export const MusicPlayerWrapper = () => {
   const { currentSong, playNext, playPrevious, setCurrentSong } = useMusicPlayer();
-  
-  if (!currentSong) return null;
+  const playerRoot = document.getElementById('player-root');
+
+  if (!currentSong || !playerRoot) {
+    return null;
+  }
 
   const player = (
     <MusicPlayer 
@@ -16,6 +19,6 @@ export const MusicPlayerWrapper = () => {
     />
   );
 
-  // Renderiza o player fora da hierarquia principal do React, diretamente no body
-  return createPortal(player, document.body);
+  // Renderiza o player no container dedicado, fora da hierarquia do #root
+  return createPortal(player, playerRoot);
 };
