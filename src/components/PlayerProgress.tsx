@@ -32,8 +32,9 @@ export const PlayerProgress: React.FC<PlayerProgressProps> = React.memo(({
         onValueChange={handleSeek}
         className="flex-1"
         disabled={!isPlayerReady}
-        // Parar propagação para evitar conflitos de toque
+        // Parar propagação de eventos de mouse/toque no container do slider
         onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
       />
       <span className="text-xs text-muted-foreground min-w-[30px] md:min-w-[40px] hidden md:block">
         {formatTime(duration)}
