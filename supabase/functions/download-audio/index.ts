@@ -68,9 +68,10 @@ async function getAudioStreamUrl(youtubeId: string): Promise<{ url: string; mime
         continue;
       }
 
+      // Sort by bitrate descending to get the highest quality audio
       audioFormats.sort((a, b) => b.bitrate - a.bitrate);
       
-      console.log(`✅ Success with ${instance}, found audio format`);
+      console.log(`✅ Success with ${instance}, found audio format: ${audioFormats[0].quality} (${audioFormats[0].bitrate})`);
       
       return {
         url: audioFormats[0].url,
@@ -101,7 +102,10 @@ serve(async (req) => {
     // Verify authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(
@@ -109,13 +113,20 @@ serve(async (req) => {
     );
 
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const { youtubeId } = await req.json();
+    const body = await req.json();
+    const { youtubeId } = body;
 
     if (!youtubeId) {
-      throw new Error('youtubeId is required');
+      return new Response(
+        JSON.stringify({ error: 'youtubeId is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Getting download URL for:', youtubeId);
@@ -132,10 +143,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in download-audio:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: errorMessage }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
