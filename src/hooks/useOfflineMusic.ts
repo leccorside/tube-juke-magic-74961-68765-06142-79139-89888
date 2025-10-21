@@ -139,8 +139,17 @@ export const useOfflineMusic = () => {
         body: { action: "get_audio_url", videoId: song.youtube_id },
       });
       
-      if (audioError || !audioData.success || !audioData.audioUrl) {
-        throw new Error(audioError?.message || audioData.error || 'Falha ao obter link de áudio.');
+      if (audioError) {
+        // Se houver um erro de rede ou status não-2xx, o objeto error do invoke é preenchido.
+        // Tentamos extrair a mensagem de erro do corpo da resposta, se possível.
+        const errorMessage = audioError.message.includes('non-2xx status code') 
+          ? 'Falha na comunicação com o servidor. Verifique se você está logado.'
+          : audioError.message;
+        throw new Error(errorMessage);
+      }
+      
+      if (!audioData.success || !audioData.audioUrl) {
+        throw new Error(audioData.error || 'Falha ao obter link de áudio.');
       }
       
       const directAudioUrl = audioData.audioUrl;
@@ -148,13 +157,10 @@ export const useOfflineMusic = () => {
       toast.loading(`Baixando ${song.title}...`, { id: downloadToastId });
 
       // 2. Fazer o fetch do áudio real
-      // Usamos 'no-cors' para tentar contornar problemas de CORS, mas isso pode limitar o acesso a headers como Content-Length.
-      // No entanto, como estamos usando um URL de Invidious, o CORS pode ser um problema.
-      // Vamos tentar o modo padrão primeiro.
       const response = await fetch(directAudioUrl);
       
       if (!response.ok) {
-        throw new Error(`Falha ao buscar áudio: ${response.statusText}. Tente novamente.`);
+        throw new Error(`Falha ao buscar áudio: ${response.statusText}. O link de áudio pode ter expirado.`);
       }
       
       // 3. Criar URL de cache com metadados
