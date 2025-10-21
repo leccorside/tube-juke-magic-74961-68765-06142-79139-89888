@@ -259,6 +259,8 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               onValueChange={handleVolumeChange} 
               className="flex-1" 
               onMouseDown={(e) => e.stopPropagation()}
+              // Adicionando onClick para garantir que o Popover não feche ao interagir com o Slider
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         </PopoverContent>
