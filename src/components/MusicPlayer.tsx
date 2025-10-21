@@ -3,7 +3,6 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, X, Loader2 } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner"; // Import Sonner toast
 
 interface MusicPlayerProps {
@@ -70,44 +69,25 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           if (response) {
             const blob = await response.blob();
             urlToPlay = URL.createObjectURL(blob);
+            console.log('Playing from offline cache.');
           }
         } catch (error) {
           console.error('Error checking offline audio:', error);
         }
       }
 
-      // 2. If not offline, fetch the direct stream URL from the existing 'download-audio' Edge Function
+      // 2. If not offline, use the stored audio_url (which is the YouTube URL)
+      // NOTE: This bypasses the Edge Function due to deployment issues. 
+      // Direct YouTube URLs might not stream audio reliably in all browsers.
       if (!urlToPlay) {
-        try {
-          console.log('Invoking Edge Function (download-audio) to get stream URL');
-          
-          const { data, error } = await supabase.functions.invoke("download-audio", {
-            body: { youtubeId: currentSong.youtube_id },
-          });
-
-          if (error) {
-            // If error is present, it means the function returned a non-2xx status
-            // The error object from invoke usually contains the details returned by the function
-            const errorMessage = error.message || "Falha desconhecida na função Edge.";
-            throw new Error(errorMessage);
-          }
-          
-          if (data.audioUrl) {
-            urlToPlay = data.audioUrl;
-          } else {
-            throw new Error(data.error || 'Resposta inválida da função Edge.');
-          }
-          
-        } catch (error: any) {
-          console.error('Error loading audio from Edge:', error);
-          
-          // Display the detailed error message returned by the Edge Function
-          const displayMessage = error.message.includes('Falha ao obter stream de áudio') 
-            ? "Erro ao carregar áudio. Tente novamente ou verifique sua conexão."
-            : error.message;
-
-          toast.error("Erro de Áudio", { description: displayMessage });
-          urlToPlay = null;
+        urlToPlay = currentSong.audio_url;
+        console.log('Using YouTube URL directly for streaming:', urlToPlay);
+        
+        // Since we are bypassing the Edge Function, we must warn the user if they are offline
+        if (!isOnline) {
+             toast.error("Você está offline e esta música não está salva para reprodução offline.");
+             setIsLoadingAudio(false);
+             return;
         }
       }
       
@@ -123,7 +103,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [currentSong?.youtube_id, currentSong?.duration, currentSong?.audio_url]);
+  }, [currentSong?.youtube_id, currentSong?.duration, currentSong?.audio_url, isOnline]);
 
   // Effect to handle playback when audioUrl is ready
   useEffect(() => {
@@ -133,9 +113,14 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       audio.play().then(() => {
         setIsPlaying(true);
       }).catch(err => {
-        console.warn('Autoplay blocked. User interaction required:', err);
+        console.warn('Autoplay blocked or playback failed. User interaction required:', err);
         // If play fails, ensure the state reflects paused
         setIsPlaying(false);
+        
+        // If the URL is a YouTube URL, it might fail to stream audio directly.
+        if (audioUrl.includes('youtube.com') || audioUrl.includes('youtu.be')) {
+             toast.warning("A reprodução automática falhou. Tente clicar no botão Play. Se o erro persistir, o streaming direto do YouTube pode estar bloqueado pelo seu navegador.");
+        }
       });
     }
   }, [audioUrl]);
@@ -270,7 +255,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
             console.error('Audio playback error:', e);
             setIsLoadingAudio(false);
             setIsPlaying(false);
-            toast.error("Erro de reprodução de áudio. O link pode estar expirado ou o servidor de streaming está indisponível.");
+            toast.error("Erro de reprodução de áudio. O link pode estar expirado ou o formato não é suportado. Tente novamente.");
           }}
           style={{ display: 'none' }}
         />
