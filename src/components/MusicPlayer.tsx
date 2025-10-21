@@ -282,7 +282,7 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
               alt={currentSong.title}
               className="w-10 h-10 md:w-14 md:h-14 rounded-full object-cover shadow-lg"
             />
-            <div className="min-w-0 text-center md:text-left">
+            <div className="min-w-0 text-left"> {/* Alterado de text-center para text-left */}
               <h4 className="font-semibold text-foreground truncate text-sm md:text-base">{currentSong.title}</h4>
               <p className="text-xs md:text-sm text-muted-foreground truncate">
                 {currentSong.artist} 
