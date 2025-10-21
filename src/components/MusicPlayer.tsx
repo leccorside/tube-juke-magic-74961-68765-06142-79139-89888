@@ -30,10 +30,11 @@ interface MusicPlayerProps {
   onClose?: () => void;
 }
 
-// Ref para o elemento de áudio HTML5 (usado pelo OfflineAudioPlayer)
-const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
 
 export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicPlayerProps) => {
+  // Ref para o elemento de áudio HTML5 (usado pelo OfflineAudioPlayer)
+  const offlineAudioRef = useRef<HTMLAudioElement | null>(null);
+  
   const youtubePlayerRef = useRef<YouTubePlayerType | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -76,9 +77,15 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
       setDuration(currentSong.duration || 0);
       setIsPlaying(false);
       
+      // Se estiver offline e não for modo offline, mostre erro
       if (!isOnline && !isOfflineMode) {
         toast.error("Você está offline. A reprodução de músicas do YouTube requer conexão.");
         setIsLoadingAudio(false);
+      }
+      
+      // Se for modo offline, o OfflineAudioPlayer deve tentar carregar e tocar
+      if (isOfflineMode) {
+        setIsLoadingAudio(true);
       }
     }
   }, [currentSong?.youtube_id, currentSong?.duration, isOnline, isOfflineMode]);
