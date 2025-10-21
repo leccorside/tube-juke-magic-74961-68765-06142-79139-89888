@@ -226,18 +226,25 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           <Button 
             size="icon" 
             variant="ghost" 
-            // Adicionando toggleMute aqui para que o clique no ícone mute/desmute
-            onClick={(e) => { e.stopPropagation(); toggleMute(e); }} 
+            // Removido onClick={toggleMute} para permitir que o Popover abra
             className="md:hidden text-foreground hover:text-primary w-8 h-8 hover:bg-transparent" 
             disabled={!isPlayerReady} 
+            onClick={(e) => e.stopPropagation()} // Mantém stopPropagation para evitar cliques no player
           >
             <VolumeIcon className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-3 mb-2" side="top" align="end">
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            {/* Usando VolumeIcon aqui também para refletir o estado no Popover */}
-            <VolumeIcon className="w-4 h-4 text-muted-foreground" />
+            {/* Adicionando o botão de Mute/Unmute dentro do Popover para mobile */}
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={toggleMute} 
+              className="text-muted-foreground hover:bg-transparent hover:text-primary h-8 w-8"
+            >
+              <VolumeIcon className="w-4 h-4" />
+            </Button>
             <Slider 
               value={[volume]} 
               max={100} 
