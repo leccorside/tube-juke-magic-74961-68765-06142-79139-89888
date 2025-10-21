@@ -86,7 +86,8 @@ async function getAudioStreamUrl(youtubeId: string): Promise<{ url: string; mime
   }
 
   console.error('All instances failed:', errors);
-  throw new Error(`Could not fetch audio stream. Errors: ${errors.join('; ')}`);
+  // Throw a detailed error message including all collected errors
+  throw new Error(`Falha ao obter stream de áudio. Detalhes: ${errors.join(' | ')}`);
 }
 
 serve(async (req) => {
@@ -144,6 +145,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in download-audio:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Return the detailed error message in the 500 response
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {

@@ -81,13 +81,16 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
         try {
           console.log('Invoking Edge Function (download-audio) to get stream URL');
           
-          // We use fetch here instead of supabase.functions.invoke because download-audio
-          // is designed to return the audio stream URL directly, not proxy the stream.
           const { data, error } = await supabase.functions.invoke("download-audio", {
             body: { youtubeId: currentSong.youtube_id },
           });
 
-          if (error) throw error;
+          if (error) {
+            // If error is present, it means the function returned a non-2xx status
+            // The error object from invoke usually contains the details returned by the function
+            const errorMessage = error.message || "Falha desconhecida na função Edge.";
+            throw new Error(errorMessage);
+          }
           
           if (data.audioUrl) {
             urlToPlay = data.audioUrl;
@@ -97,7 +100,13 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
           
         } catch (error: any) {
           console.error('Error loading audio from Edge:', error);
-          toast.error("Erro ao carregar áudio: " + (error.message || "Falha na função Edge."));
+          
+          // Display the detailed error message returned by the Edge Function
+          const displayMessage = error.message.includes('Falha ao obter stream de áudio') 
+            ? "Erro ao carregar áudio. Tente novamente ou verifique sua conexão."
+            : error.message;
+
+          toast.error("Erro de Áudio", { description: displayMessage });
           urlToPlay = null;
         }
       }
