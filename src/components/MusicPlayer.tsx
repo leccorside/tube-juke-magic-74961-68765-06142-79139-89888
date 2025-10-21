@@ -107,6 +107,18 @@ export const MusicPlayer = ({ currentSong, onNext, onPrevious, onClose }: MusicP
     };
   }, [currentSong?.youtube_id, currentSong?.duration]);
 
+  // NEW: Attempt to play immediately when audioUrl is set
+  useEffect(() => {
+    if (audioRef.current && audioUrl) {
+      // Attempt to play immediately when the URL is available
+      audioRef.current.play().catch(err => {
+        console.warn('Autoplay attempt failed after URL load:', err);
+        // If it fails, ensure the state reflects paused
+        setIsPlaying(false);
+      });
+    }
+  }, [audioUrl]);
+
 
   // Update volume when it changes
   useEffect(() => {
