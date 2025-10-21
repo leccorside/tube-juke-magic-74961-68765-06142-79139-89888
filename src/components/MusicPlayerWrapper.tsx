@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 
@@ -6,7 +7,7 @@ export const MusicPlayerWrapper = () => {
   
   if (!currentSong) return null;
 
-  return (
+  const player = (
     <MusicPlayer 
       currentSong={currentSong} 
       onNext={playNext}
@@ -14,4 +15,7 @@ export const MusicPlayerWrapper = () => {
       onClose={() => setCurrentSong(null)}
     />
   );
+
+  // Renderiza o player fora da hierarquia principal do React, diretamente no body
+  return createPortal(player, document.body);
 };
