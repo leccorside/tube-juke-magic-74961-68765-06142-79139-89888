@@ -100,7 +100,7 @@ export const MusicCard = ({
   };
 
   return (
-    <Card className="group relative overflow-hidden bg-gradient-to-b from-card to-secondary border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
+    <Card className="group relative bg-gradient-to-b from-card to-secondary border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
       <div className="relative aspect-square overflow-hidden">
         <img
           src={thumbnail || "/placeholder.svg"}
