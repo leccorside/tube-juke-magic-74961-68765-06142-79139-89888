@@ -100,8 +100,8 @@ export const MusicCard = ({
   };
 
   return (
-    <Card className="group relative bg-gradient-to-b from-card to-secondary border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
-      <div className="relative aspect-square"> {/* Removido overflow-hidden daqui */}
+    <Card className="group relative overflow-hidden bg-gradient-to-b from-card to-secondary border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
+      <div className="relative aspect-square overflow-hidden">
         <img
           src={thumbnail || "/placeholder.svg"}
           alt={title}
@@ -133,7 +133,7 @@ export const MusicCard = ({
                       <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="left" sideOffset={10}>
                     <p>Adicionar à Biblioteca</p>
                   </TooltipContent>
                 </Tooltip>
@@ -157,7 +157,7 @@ export const MusicCard = ({
                         <Play className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} fill-current`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="top" sideOffset={10}>
                       <p>Tocar Música</p>
                     </TooltipContent>
                   </Tooltip>
@@ -178,7 +178,7 @@ export const MusicCard = ({
                       <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="left" sideOffset={10}>
                     <p>Adicionar à Fila</p>
                   </TooltipContent>
                 </Tooltip>
@@ -194,7 +194,7 @@ export const MusicCard = ({
                       <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="left" sideOffset={10}>
                     <p>Adicionar à Playlist</p>
                   </TooltipContent>
                 </Tooltip>
@@ -210,7 +210,7 @@ export const MusicCard = ({
                         <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="left" sideOffset={10}>
                       <p>{isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -228,7 +228,7 @@ export const MusicCard = ({
                         <Trash2 className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent side="left" sideOffset={10}>
                       <p>Remover da Biblioteca</p>
                     </TooltipContent>
                   </Tooltip>
