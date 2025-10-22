@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Loader2, Heart, LogOut, ListMusic } from "lucide-react";
+import { Music2, Loader2, Heart, LogOut, ListMusic, Search } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Importando Input para a busca local
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +39,7 @@ const Index = () => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [localSearchQuery, setLocalSearchQuery] = useState(""); // Novo estado para busca local
 
   // Fetch user's songs from database
   const { data: songs, refetch: refetchSongs } = useQuery({
@@ -55,9 +57,6 @@ const Index = () => {
     enabled: !!user,
   });
 
-  // REMOVIDO: useEffect que sobrescrevia a playlist com todas as músicas da biblioteca.
-  // A playlist agora só é definida ao clicar em 'Play' em um card.
-
   // Fetch user's favorites
   const { data: favorites, refetch: refetchFavorites } = useQuery({
     queryKey: ["favorites", user?.id],
@@ -72,8 +71,25 @@ const Index = () => {
     },
     enabled: !!user,
   });
+  
+  // Filtrar músicas da biblioteca com base na busca local
+  const filteredSongs = useMemo(() => {
+    if (!songs) return [];
+    if (!localSearchQuery) return songs;
+
+    const query = localSearchQuery.toLowerCase();
+    return songs.filter(song => 
+      song.title.toLowerCase().includes(query) || 
+      (song.artist && song.artist.toLowerCase().includes(query))
+    );
+  }, [songs, localSearchQuery]);
+
 
   const handleSearch = async (query: string) => {
+    // Limpa resultados da busca local ao iniciar busca externa
+    setLocalSearchQuery("");
+    setSearchResults([]);
+    
     setIsSearching(true);
     try {
       const { data, error } = await supabase.functions.invoke("search-and-download", {
@@ -298,25 +314,43 @@ const Index = () => {
         {songs && songs.length > 0 && (
           <div>
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-foreground">Sua Biblioteca</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-              {songs.map((song) => (
-                <MusicCard
-                  key={song.id}
-                  id={song.id}
-                  title={song.title}
-                  artist={song.artist}
-                  thumbnail={song.thumbnail_url}
-                  duration={song.duration}
-                  onPlay={() => handlePlay(song)}
-                  onDelete={() => handleDelete(song.id)}
-                  onToggleFavorite={() => handleToggleFavorite(song.id)}
-                  isFavorite={favorites?.includes(song.id)}
-                  variant="library"
-                  youtubeId={song.youtube_id}
-                  audioUrl={song.audio_url} // Passando audioUrl
-                />
-              ))}
+            
+            {/* Local Search Bar for Library */}
+            <div className="relative mb-6 max-w-lg">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar músicas salvas..."
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
+                className="pl-10 bg-card border-border"
+              />
             </div>
+            
+            {filteredSongs.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                {filteredSongs.map((song) => (
+                  <MusicCard
+                    key={song.id}
+                    id={song.id}
+                    title={song.title}
+                    artist={song.artist}
+                    thumbnail={song.thumbnail_url}
+                    duration={song.duration}
+                    onPlay={() => handlePlay(song)}
+                    onDelete={() => handleDelete(song.id)}
+                    onToggleFavorite={() => handleToggleFavorite(song.id)}
+                    isFavorite={favorites?.includes(song.id)}
+                    variant="library"
+                    youtubeId={song.youtube_id}
+                    audioUrl={song.audio_url} // Passando audioUrl
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhuma música encontrada com o termo "{localSearchQuery}".</p>
+              </div>
+            )}
           </div>
         )}
 

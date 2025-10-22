@@ -1,12 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Heart, ArrowLeft, ListMusic } from "lucide-react";
+import { Music2, Heart, ArrowLeft, ListMusic, Search } from "lucide-react";
 import { MusicCard } from "@/components/MusicCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Importando Input para a busca local
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -26,6 +27,7 @@ const Favorites = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
+  const [localSearchQuery, setLocalSearchQuery] = useState(""); // Novo estado para busca local
 
   // Fetch favorite songs
   const { data: favorites, refetch: refetchFavorites } = useQuery({
@@ -53,8 +55,19 @@ const Favorites = () => {
     },
     enabled: !!user,
   });
+  
+  // Filtrar músicas favoritas com base na busca local
+  const filteredFavorites = useMemo(() => {
+    if (!favorites) return [];
+    if (!localSearchQuery) return favorites;
 
-  // REMOVIDO: useEffect que sobrescrevia a playlist com todos os favoritos.
+    const query = localSearchQuery.toLowerCase();
+    return favorites.filter((fav: any) => 
+      fav.title.toLowerCase().includes(query) || 
+      (fav.artist && fav.artist.toLowerCase().includes(query))
+    );
+  }, [favorites, localSearchQuery]);
+
 
   const handleRemoveFavorite = async (favoriteId: string, songId: string) => {
     try {
@@ -141,9 +154,23 @@ const Favorites = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {favorites && favorites.length > 0 ? (
+        {favorites && favorites.length > 0 && (
+          <div className="mb-6">
+            <div className="relative mb-6 max-w-lg">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Filtrar favoritos..."
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
+                className="pl-10 bg-card border-border"
+              />
+            </div>
+          </div>
+        )}
+        
+        {favorites && favorites.length > 0 && filteredFavorites.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {favorites.map((song: any) => (
+            {filteredFavorites.map((song: any) => (
               <MusicCard
                 key={song.id}
                 id={song.id}
@@ -157,6 +184,10 @@ const Favorites = () => {
                 youtubeId={song.youtube_id}
               />
             ))}
+          </div>
+        ) : favorites && favorites.length > 0 && filteredFavorites.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Nenhuma música favorita encontrada com o termo "{localSearchQuery}".</p>
           </div>
         ) : (
           <div className="text-center py-12">
