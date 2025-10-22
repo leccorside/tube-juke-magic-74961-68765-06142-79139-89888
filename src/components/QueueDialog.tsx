@@ -95,7 +95,7 @@ const SortableItem = ({ song, index, currentSongId, onPlay, onRemove }: { song: 
         </p>
       </div>
       
-      <div className="flex gap-1">
+      <div className="flex gap-1 flex-shrink-0">
         <Button
           size="icon"
           variant="ghost"
@@ -170,8 +170,9 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col">
-        <DialogHeader>
+      {/* Removendo padding horizontal padrão do DialogContent e aplicando flex-col */}
+      <DialogContent className="sm:max-w-[425px] h-[80vh] p-0 flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <ListMusic className="w-5 h-5 text-primary" />
             Fila de Reprodução
@@ -184,8 +185,7 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
             <p className="text-muted-foreground">A fila está vazia.</p>
           </div>
         ) : (
-          // Removido -mx-4 px-4 do ScrollArea
-          <ScrollArea className="flex-1 overflow-y-auto max-h-full">
+          <ScrollArea className="flex-1 overflow-y-auto max-h-full px-6 pb-6">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -195,8 +195,7 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
                 items={playlist.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {/* Adicionado padding horizontal ao container interno */}
-                <div className="space-y-2 px-1 pb-1"> 
+                <div className="space-y-2"> 
                   {playlist.map((song, index) => (
                     <SortableItem 
                       key={song.id} 
