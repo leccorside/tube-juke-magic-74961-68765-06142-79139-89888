@@ -184,7 +184,8 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
             <p className="text-muted-foreground">A fila está vazia.</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 overflow-y-auto -mx-4 px-4 max-h-full">
+          // Removido -mx-4 px-4 do ScrollArea
+          <ScrollArea className="flex-1 overflow-y-auto max-h-full">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -194,7 +195,8 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
                 items={playlist.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="space-y-2">
+                {/* Adicionado padding horizontal ao container interno */}
+                <div className="space-y-2 px-1 pb-1"> 
                   {playlist.map((song, index) => (
                     <SortableItem 
                       key={song.id} 
