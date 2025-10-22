@@ -187,7 +187,7 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* p-0 remove o padding padrão do DialogContent */}
-      <DialogContent className="sm:max-w-[425px] h-[80vh] p-0 flex flex-col">
+      <DialogContent className="sm:max-w-[425px] h-[80vh] p-0 flex flex-col z-[150]">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <ListMusic className="w-5 h-5 text-primary" />
