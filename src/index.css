@@ -84,7 +84,6 @@ All colors MUST be HSL.
 .animation-delay-7 { animation-delay: 0.45s; }
 .animation-delay-8 { animation-delay: 0.15s; }
 .animation-delay-9 { animation-delay: 0.35s; }
-
 .animation-duration-0 { animation-duration: 1.2s; }
 .animation-duration-1 { animation-duration: 1.5s; }
 .animation-duration-2 { animation-duration: 1.1s; }
@@ -95,3 +94,10 @@ All colors MUST be HSL.
 .animation-duration-7 { animation-duration: 1.55s; }
 .animation-duration-8 { animation-duration: 1.15s; }
 .animation-duration-9 { animation-duration: 1.45s; }
+
+/* Fix for Radix ScrollArea content overflow */
+/* Target the internal content wrapper div that Radix sets to display: table */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 100%; /* Garante que ele ocupe a largura total */
+}
