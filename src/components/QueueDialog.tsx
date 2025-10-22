@@ -184,7 +184,7 @@ export const QueueDialog: React.FC<QueueDialogProps> = ({ isOpen, onClose }) => 
             <p className="text-muted-foreground">A fila está vazia.</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 overflow-y-auto -mx-4 px-4">
+          <ScrollArea className="flex-1 overflow-y-auto -mx-4 px-4 max-h-full">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
