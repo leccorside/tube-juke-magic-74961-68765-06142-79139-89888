@@ -66,7 +66,8 @@ const SortableItem = ({ song, index, currentSongId, onPlay, onRemove }: { song: 
     <Card
       ref={setNodeRef}
       style={style}
-      className={`p-3 flex items-center gap-3 cursor-default transition-all duration-200 ${isCurrent ? 'border-primary/50 bg-primary/10 shadow-md' : 'bg-card hover:bg-secondary/50'}`}
+      // Adicionando w-full para garantir que o Card ocupe 100% da largura disponível
+      className={`w-full p-3 flex items-center gap-3 cursor-default transition-all duration-200 ${isCurrent ? 'border-primary/50 bg-primary/10 shadow-md' : 'bg-card hover:bg-secondary/50'}`}
     >
       <div 
         className="cursor-grab text-muted-foreground hover:text-foreground p-1"
