@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface QueueDialogProps {
   isOpen: boolean;
@@ -66,7 +67,6 @@ const SortableItem = ({ song, index, currentSongId, onPlay, onRemove }: { song: 
     <Card
       ref={setNodeRef}
       style={style}
-      // Adicionando w-full para garantir que o Card ocupe 100% da largura disponível
       className={`w-full p-3 flex items-center gap-3 cursor-default transition-all duration-200 ${isCurrent ? 'border-primary/50 bg-primary/10 shadow-md' : 'bg-card hover:bg-secondary/50'}`}
     >
       <div 
@@ -97,22 +97,37 @@ const SortableItem = ({ song, index, currentSongId, onPlay, onRemove }: { song: 
       </div>
       
       <div className="flex gap-1 flex-shrink-0">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => onPlay(song)}
-          className="text-muted-foreground hover:text-primary h-8 w-8"
-        >
-          <Play className="w-4 h-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => onRemove(song.id)}
-          className="text-muted-foreground hover:text-destructive h-8 w-8"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onPlay(song)}
+              className="text-muted-foreground hover:text-primary h-8 w-8"
+            >
+              <Play className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tocar Agora</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onRemove(song.id)}
+              className="text-muted-foreground hover:text-destructive h-8 w-8"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Remover da Fila</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </Card>
   );

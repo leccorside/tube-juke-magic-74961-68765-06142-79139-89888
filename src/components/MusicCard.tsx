@@ -6,6 +6,7 @@ import { AddToPlaylistDialog } from "./AddToPlaylistDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOfflineMusic } from "@/hooks/useOfflineMusic";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext"; // Importando o hook do player
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MusicCardProps {
   id: string;
@@ -122,15 +123,21 @@ export const MusicCard = ({
           {variant === "search" && (
             <div className="absolute inset-0 flex items-center justify-center gap-4">
               {onDownload && !isDownloading && (
-                <Button
-                  size="icon"
-                  onClick={onDownload}
-                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
-                >
-                  <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      onClick={onDownload}
+                      className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
+                    >
+                      <Download className={isMobile ? 'w-6 h-6' : 'w-7 h-7'} /> 
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Adicionar à Biblioteca</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
-              {/* Botão Adicionar à Fila removido dos resultados de busca */}
             </div>
           )}
           
@@ -140,13 +147,20 @@ export const MusicCard = ({
               {/* Play button centered */}
               {onPlay && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Button
-                    size="icon"
-                    onClick={onPlay}
-                    className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
-                  >
-                    <Play className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} fill-current`} />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        onClick={onPlay}
+                        className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-12 h-12' : 'w-14 h-14'} shadow-lg`}
+                      >
+                        <Play className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} fill-current`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Tocar Música</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               )}
               
@@ -154,56 +168,70 @@ export const MusicCard = ({
               <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex flex-col ${isMobile ? 'gap-1' : 'gap-2'}`}>
                 
                 {/* Add to Queue Button */}
-                <Button
-                  size="icon"
-                  onClick={handleAddToQueue}
-                  className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                >
-                  <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      onClick={handleAddToQueue}
+                      className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                    >
+                      <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Adicionar à Fila</p>
+                  </TooltipContent>
+                </Tooltip>
                 
-                {/* Offline Toggle Button (Download Oculto) */}
-                {/* <Button
-                  size="icon"
-                  onClick={handleToggleOffline}
-                  className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                  disabled={isDownloadingOffline}
-                >
-                  {isDownloadingOffline ? (
-                    <Loader2 className={isMobile ? 'w-4 h-4 animate-spin' : 'w-5 h-5 animate-spin'} />
-                  ) : isOfflineAvailable ? (
-                    <CheckCircle2 className={isMobile ? 'w-4 h-4 text-green-400' : 'w-5 h-5 text-green-400'} />
-                  ) : (
-                    <Download className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                  )}
-                </Button> */}
-
                 {/* Add to Playlist Dialog Button */}
-                <Button
-                  size="icon"
-                  onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
-                  className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                >
-                  <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
+                      className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                    >
+                      <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Adicionar à Playlist</p>
+                  </TooltipContent>
+                </Tooltip>
+                
                 {onToggleFavorite && (
-                  <Button
-                    size="icon"
-                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-                    className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                  >
-                    <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+                        className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                      >
+                        <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
+                
                 {onDelete && (
-                  <Button
-                    size="icon"
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    variant="destructive"
-                    className={`rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
-                  >
-                    <Trash2 className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                        variant="destructive"
+                        className={`rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                      >
+                        <Trash2 className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Remover da Biblioteca</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             </>
