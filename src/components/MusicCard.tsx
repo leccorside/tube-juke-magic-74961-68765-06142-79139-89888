@@ -99,6 +99,21 @@ export const MusicCard = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // Classes de tamanho para os botões laterais
+  const buttonSizeClasses = isMobile ? 'w-7 h-7' : 'w-10 h-10';
+  const iconSizeClasses = isMobile ? 'w-4 h-4' : 'w-5 h-5';
+  
+  // Estilo sutil para os botões laterais no mobile
+  const subtleButtonClasses = `
+    bg-transparent 
+    hover:bg-secondary/50 
+    text-muted-foreground 
+    hover:text-primary 
+    rounded-full 
+    shadow-none 
+    ${buttonSizeClasses}
+  `;
+
   return (
     <Card className="group relative overflow-hidden bg-gradient-to-b from-card to-secondary border-border hover:border-primary/50 transition-all duration-300 hover:shadow-glow">
       <div className="relative aspect-square overflow-hidden">
@@ -146,7 +161,7 @@ export const MusicCard = ({
           {/* Library variant: play center, other buttons right */}
           {variant === "library" && (
             <>
-              {/* Play button centered */}
+              {/* Play button centered (Mantido proeminente) */}
               {onPlay && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Tooltip>
@@ -166,7 +181,7 @@ export const MusicCard = ({
                 </div>
               )}
               
-              {/* Other buttons on the right vertically */}
+              {/* Other buttons on the right vertically (Tornados sutis no mobile) */}
               <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex flex-col ${isMobile ? 'gap-1' : 'gap-2'}`}>
                 
                 {/* Add to Queue Button */}
@@ -175,9 +190,10 @@ export const MusicCard = ({
                     <Button
                       size="icon"
                       onClick={handleAddToQueue}
-                      className={`bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                      className={subtleButtonClasses}
+                      variant="ghost"
                     >
-                      <ListMusic className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                      <ListMusic className={iconSizeClasses} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left" sideOffset={10}>
@@ -191,9 +207,10 @@ export const MusicCard = ({
                     <Button
                       size="icon"
                       onClick={(e) => { e.stopPropagation(); setIsPlaylistDialogOpen(true); }}
-                      className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                      className={subtleButtonClasses}
+                      variant="ghost"
                     >
-                      <ListPlus className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                      <ListPlus className={iconSizeClasses} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left" sideOffset={10}>
@@ -207,9 +224,10 @@ export const MusicCard = ({
                       <Button
                         size="icon"
                         onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
-                        className={`bg-accent hover:bg-accent/90 text-accent-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                        className={subtleButtonClasses}
+                        variant="ghost"
                       >
-                        <Heart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${isFavorite ? "fill-current" : ""}`} />
+                        <Heart className={`${iconSizeClasses} ${isFavorite ? "fill-primary text-primary" : ""}`} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left" sideOffset={10}>
@@ -224,10 +242,10 @@ export const MusicCard = ({
                       <Button
                         size="icon"
                         onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                        variant="destructive"
-                        className={`rounded-full ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} shadow-lg`}
+                        className={subtleButtonClasses}
+                        variant="ghost"
                       >
-                        <Trash2 className={isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
+                        <Trash2 className={`${iconSizeClasses} text-destructive/80 hover:text-destructive`} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left" sideOffset={10}>
