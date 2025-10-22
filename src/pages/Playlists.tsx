@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Music, Trash2, Play } from "lucide-react";
+import { Plus, Music, Trash2, Play, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
@@ -145,7 +145,7 @@ export default function Playlists() {
               onClick={() => navigate("/")}
               size={isMobile ? "sm" : "default"}
             >
-              <Music className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
