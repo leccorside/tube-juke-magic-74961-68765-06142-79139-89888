@@ -107,7 +107,8 @@ export const MusicCard = ({
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Ajuste: No mobile, a opacidade deve ser 100% para mostrar os botões */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
         
         {/* Download progress indicator (only for library download) */}
         {(isDownloading || isDownloadingOffline) && (
@@ -117,7 +118,8 @@ export const MusicCard = ({
           </div>
         )}
         
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* Ajuste: No mobile, a opacidade deve ser 100% para mostrar os botões */}
+        <div className={`absolute inset-0 transition-opacity duration-300 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
           
           {/* Search variant: download button only */}
           {variant === "search" && (
