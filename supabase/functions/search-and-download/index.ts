@@ -1,5 +1,11 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+
+// Importando uma biblioteca de extração de links compatível com Deno
+// Usaremos uma alternativa que tenta extrair o link de áudio de forma direta
+// Nota: A estabilidade desta função depende das APIs externas do YouTube.
+import { getInfo } from 'https://esm.sh/ytdl-core@4.11.5';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,15 +83,47 @@ async function searchYouTube(query: string): Promise<SearchResult[]> {
   }
 }
 
-// Function to get the direct audio URL for a video ID (Placeholder - always fails for now)
+// Function to get the direct audio URL for a video ID
 async function getDirectAudioUrl(videoId: string): Promise<string> {
-  // Esta função está sendo removida pois a extração direta falhou consistentemente.
-  // Retornamos um erro claro para o cliente.
-  throw new Error('A extração de link de áudio direto está temporariamente indisponível devido a restrições do YouTube.');
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  
+  try {
+    const info = await getInfo(videoUrl, {
+      // Opções para otimizar a busca
+      requestOptions: {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        }
+      }
+    });
+
+    // Filtra apenas formatos de áudio (itag 140 é geralmente m4a 128kbps)
+    const audioFormat = info.formats.find(format => 
+      format.mimeType?.includes('audio/mp4') && format.audioQuality === 'AUDIO_QUALITY_MEDIUM'
+    );
+
+    if (audioFormat && audioFormat.url) {
+      return audioFormat.url;
+    }
+    
+    // Tenta encontrar o melhor formato de áudio se o 140 não for encontrado
+    const bestAudio = info.formats
+      .filter(format => format.hasAudio && !format.hasVideo && format.url)
+      .sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0))[0];
+
+    if (bestAudio && bestAudio.url) {
+      return bestAudio.url;
+    }
+
+    throw new Error('Nenhum formato de áudio direto encontrado para este vídeo.');
+  } catch (error) {
+    console.error('YTDL Error:', error);
+    throw new Error('Falha ao extrair link de áudio. O vídeo pode estar indisponível ou a extração foi bloqueada.');
+  }
 }
 
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
