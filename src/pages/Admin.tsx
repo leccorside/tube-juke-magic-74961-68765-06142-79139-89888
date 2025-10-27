@@ -48,7 +48,10 @@ const Admin = () => {
               Visualize e modere contas de usuários.
             </p>
           </Card>
-          <Card className="p-6 bg-secondary/50">
+          <Card 
+            className="p-6 bg-secondary/50 hover:bg-secondary/70 transition-colors cursor-pointer"
+            onClick={() => navigate("/admin/stats")} // Link atualizado
+          >
             <BarChart3 className="w-6 h-6 text-primary mb-3" />
             <h3 className="text-xl font-semibold mb-2">Estatísticas</h3>
             <p className="text-muted-foreground text-sm">
