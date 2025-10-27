@@ -39,56 +39,18 @@ serve(async (req) => {
       );
     }
 
-    // 2. Buscar contagens
-    
-    // Total Users (Profiles)
-    const { count: totalUsers, error: userError } = await supabaseAdmin
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-      
-    if (userError) throw userError;
+    // 2. Chamar a função RPC para obter as músicas mais favoritadas
+    const { data: topSongsData, error: rpcError } = await supabaseAdmin.rpc('get_top_favorited_songs');
 
-    // Total Songs
-    const { count: totalSongs, error: songError } = await supabaseAdmin
-      .from('songs')
-      .select('*', { count: 'exact', head: true });
-      
-    if (songError) throw songError;
-
-    // Total Playlists
-    const { count: totalPlaylists, error: playlistError } = await supabaseAdmin
-      .from('playlists')
-      .select('*', { count: 'exact', head: true });
-      
-    if (playlistError) throw playlistError;
-      
-    // Total Favorites (NOVA MÉTRICA)
-    const { count: totalFavorites, error: favoritesError } = await supabaseAdmin
-      .from('favorites')
-      .select('*', { count: 'exact', head: true });
-      
-    if (favoritesError) throw favoritesError;
-
-    // Songs Added Today (last 24 hours)
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count: songsToday, error: songsTodayError } = await supabaseAdmin
-      .from('songs')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', yesterday);
-      
-    if (songsTodayError) throw songsTodayError;
-
+    if (rpcError) {
+      console.error('Error fetching top songs:', rpcError);
+      throw new Error(`Failed to fetch top songs: ${rpcError.message}`);
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        stats: {
-          totalUsers: totalUsers || 0,
-          totalSongs: totalSongs || 0,
-          totalPlaylists: totalPlaylists || 0,
-          totalFavorites: totalFavorites || 0, // NOVO
-          songsToday: songsToday || 0,
-        }
+        topSongs: topSongsData || []
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

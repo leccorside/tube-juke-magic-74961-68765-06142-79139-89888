@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Users, Music, ListMusic, Loader2 } from "lucide-react";
+import { ArrowLeft, BarChart3, Users, Music, ListMusic, Loader2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/StatsCard";
 import { UserGrowthChart } from "@/components/UserGrowthChart";
+import { TopSongsChart } from "@/components/TopSongsChart"; // Importando o novo gráfico
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ interface SystemStats {
   totalUsers: number;
   totalSongs: number;
   totalPlaylists: number;
+  totalFavorites: number; // NOVO
   songsToday: number;
 }
 
@@ -39,7 +41,7 @@ const AdminStats = () => {
     toast.error("Erro ao carregar métricas: " + error.message);
   }
 
-  const currentStats: SystemStats = stats || { totalUsers: 0, totalSongs: 0, totalPlaylists: 0, songsToday: 0 };
+  const currentStats: SystemStats = stats || { totalUsers: 0, totalSongs: 0, totalPlaylists: 0, totalFavorites: 0, songsToday: 0 };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24">
@@ -99,6 +101,12 @@ const AdminStats = () => {
               description="Playlists ativas no sistema"
             />
             <StatsCard
+              title="Total de Favoritos"
+              value={currentStats.totalFavorites.toLocaleString()}
+              icon={Heart}
+              description="Músicas marcadas como favoritas"
+            />
+            <StatsCard
               title="Músicas Adicionadas Hoje"
               value={currentStats.songsToday}
               icon={Music}
@@ -107,7 +115,10 @@ const AdminStats = () => {
           </div>
         )}
         
-        <UserGrowthChart />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <UserGrowthChart />
+          <TopSongsChart />
+        </div>
         
         <Card className="mt-8 p-6 bg-secondary/50 border-border">
           <h3 className="text-xl font-semibold mb-2">Nota sobre Dados</h3>
