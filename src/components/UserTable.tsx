@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<'profiles'>;
@@ -30,7 +30,6 @@ const fetchUsers = async (): Promise<Profile[]> => {
 
 const deleteUser = async (userId: string) => {
   // Chamamos a Edge Function para deletar o usuário com privilégios de serviço
-  // Mantemos a chamada à Edge Function, pois a exclusão requer Service Role Key
   const { error } = await supabase.functions.invoke("admin-delete-user", {
     body: { userId },
   });
@@ -53,10 +52,20 @@ const updateUserProfile = async (profile: Partial<Profile>) => {
 
 export const UserTable = () => {
   const queryClient = useQueryClient();
-  const { data: users, isLoading } = useQuery({
+  
+  // Tipagem explícita para o retorno da query
+  const { data: users, isLoading, error: fetchError } = useQuery<Profile[], Error>({
     queryKey: ["adminUsers"],
     queryFn: fetchUsers,
   });
+  
+  // Adicionando useEffect para exibir erro de busca (substituindo onError)
+  useEffect(() => {
+    if (fetchError) {
+      console.error("Fetch Users Error:", fetchError);
+      toast.error("Erro ao carregar usuários: " + fetchError.message);
+    }
+  }, [fetchError]);
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -106,6 +115,15 @@ export const UserTable = () => {
       </div>
     );
   }
+  
+  // Se houver um erro de busca, exibe uma mensagem
+  if (fetchError) {
+    return (
+      <div className="text-center py-12 text-red-500">
+        <p>Falha ao carregar dados. Verifique o console para detalhes do erro de RLS.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden">
@@ -130,6 +148,7 @@ export const UserTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {/* Usamos users? para garantir que só mapeamos se users não for undefined */}
             {users?.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[50px]">{user.id.substring(0, 4)}...</TableCell>
