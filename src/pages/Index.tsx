@@ -113,6 +113,7 @@ const Index = () => {
         variant: "destructive",
       });
     } finally {
+      setDownloadingId(null);
       setIsSearching(false);
     }
   };
@@ -237,7 +238,7 @@ const Index = () => {
               {/* Removida a condição !isMobile para exibir sempre */}
               <div>
                 <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Leccor Music
+                  Leccor Music®
                 </h1>
                 <p className="text-muted-foreground text-xs md:text-base">
                   Busque e ouça suas músicas favoritas do YouTube
