@@ -21,7 +21,14 @@ interface Song {
 interface PlaylistSong {
   id: string;
   position: number;
-  songs: Song;
+  songs: Song; // Objeto Song
+}
+
+// Tipo auxiliar para o retorno da query do Supabase
+interface SupabasePlaylistSong {
+  id: string;
+  position: number;
+  songs: Song | Song[] | null; // Supabase pode retornar array ou objeto
 }
 
 export default function PlaylistDetail() {
@@ -71,7 +78,26 @@ export default function PlaylistDetail() {
         .order("position", { ascending: true });
 
       if (songsError) throw songsError;
-      setSongs(songsData || []);
+      
+      // Mapeia os dados para garantir que 'songs' seja um objeto Song único
+      const mappedSongs: PlaylistSong[] = (songsData as SupabasePlaylistSong[] || [])
+        .map(item => {
+          // Se songs for um array, pega o primeiro elemento (comportamento comum do Supabase)
+          const songDetail = Array.isArray(item.songs) ? item.songs[0] : item.songs;
+          
+          // Garante que songDetail não é nulo antes de retornar
+          if (songDetail) {
+            return {
+              id: item.id,
+              position: item.position,
+              songs: songDetail,
+            };
+          }
+          return null;
+        })
+        .filter((item): item is PlaylistSong => item !== null); // Filtra nulos
+
+      setSongs(mappedSongs);
     } catch (error: any) {
       toast.error("Erro ao carregar playlist: " + error.message);
     } finally {
