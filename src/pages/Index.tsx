@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music2, Loader2, Heart, LogOut, ListMusic, Search } from "lucide-react";
+import { Music2, Loader2, Heart, LogOut, ListMusic, Search, Settings } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { MusicCard } from "@/components/MusicCard";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface Song {
   id: string;
@@ -35,6 +36,7 @@ const Index = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const isAdmin = useIsAdmin();
   const { setCurrentSong, setPlaylist } = useMusicPlayer();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -246,6 +248,19 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/admin")}
+                  size={isMobile ? "sm" : "default"}
+                  className="flex-1 md:flex-none"
+                >
+                  <Settings className="w-4 h-4" />
+                  {!isMobile && <span className="ml-2">Admin</span>}
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 onClick={() => navigate("/playlists")}

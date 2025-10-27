@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MusicPlayerWrapper } from "@/components/MusicPlayerWrapper";
 import Index from "./pages/Index";
@@ -15,6 +16,7 @@ import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import Offline from "./pages/Offline";
 import Install from "./pages/Install";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,15 @@ const AppContent = () => {
     <Routes>
       <Route path="/auth" element={<AuthWrapper />} />
       <Route path="/install" element={<Install />} />
+      
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <Admin />
+          </AdminRoute>
+        }
+      />
       
       <Route
         path="/"
