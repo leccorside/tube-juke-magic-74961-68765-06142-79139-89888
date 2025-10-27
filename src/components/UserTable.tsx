@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Tables } from "@/integrations/supabase/types";
+import { DeleteUserConfirmationDialog } from "./DeleteUserConfirmationDialog";
 
 type Profile = Tables<'profiles'>;
 
@@ -74,6 +75,7 @@ export const UserTable = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [deletingUser, setDeletingUser] = useState<Profile | null>(null); // Novo estado para o usuário a ser deletado
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
@@ -112,6 +114,18 @@ export const UserTable = () => {
     // A Edge Function espera um objeto de updates
     updateMutation.mutate({ id: userId, name: editName, email: editEmail });
   };
+  
+  const handleDeleteClick = (user: Profile) => {
+    setDeletingUser(user);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (deletingUser) {
+      deleteMutation.mutate(deletingUser.id);
+      // O diálogo será fechado automaticamente pelo onOpenChange quando a mutação terminar
+      // ou se o usuário clicar em Cancelar.
+    }
+  };
 
   if (isLoading) {
     return (
@@ -131,103 +145,114 @@ export const UserTable = () => {
   }
 
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden">
-      <div className="p-4 flex justify-between items-center border-b border-border">
-        <h3 className="text-lg font-semibold">Total de Usuários: {users?.length || 0}</h3>
-        {/* Adicionar Usuário (Apenas via Supabase Auth Admin API, que é complexo para o cliente) */}
-        <Button variant="outline" disabled>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Adicionar (WIP)
-        </Button>
+    <>
+      <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+        <div className="p-4 flex justify-between items-center border-b border-border">
+          <h3 className="text-lg font-semibold">Total de Usuários: {users?.length || 0}</h3>
+          {/* Adicionar Usuário (Apenas via Supabase Auth Admin API, que é complexo para o cliente) */}
+          <Button variant="outline" disabled>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Adicionar (WIP)
+          </Button>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">ID</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Criado em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users?.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[50px]">{user.id.substring(0, 4)}...</TableCell>
+                  <TableCell>
+                    {editingId === user.id ? (
+                      <Input 
+                        value={editName} 
+                        onChange={(e) => setEditName(e.target.value)} 
+                        className="h-8"
+                        disabled={updateMutation.isPending}
+                      />
+                    ) : (
+                      user.name
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === user.id ? (
+                      <Input 
+                        value={editEmail} 
+                        onChange={(e) => setEditEmail(e.target.value)} 
+                        className="h-8"
+                        disabled={updateMutation.isPending}
+                      />
+                    ) : (
+                      user.email
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    {editingId === user.id ? (
+                      <>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleSave(user.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-green-500" />}
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => setEditingId(null)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <X className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleEdit(user)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleDeleteClick(user)} // Chamando o handler do diálogo
+                          disabled={deleteMutation.isPending}
+                        >
+                          {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin text-destructive" /> : <Trash2 className="w-4 h-4 text-destructive" />}
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">ID</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[50px]">{user.id.substring(0, 4)}...</TableCell>
-                <TableCell>
-                  {editingId === user.id ? (
-                    <Input 
-                      value={editName} 
-                      onChange={(e) => setEditName(e.target.value)} 
-                      className="h-8"
-                      disabled={updateMutation.isPending}
-                    />
-                  ) : (
-                    user.name
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === user.id ? (
-                    <Input 
-                      value={editEmail} 
-                      onChange={(e) => setEditEmail(e.target.value)} 
-                      className="h-8"
-                      disabled={updateMutation.isPending}
-                    />
-                  ) : (
-                    user.email
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {new Date(user.created_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  {editingId === user.id ? (
-                    <>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => handleSave(user.id)}
-                        disabled={updateMutation.isPending}
-                      >
-                        {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 text-green-500" />}
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => setEditingId(null)}
-                        disabled={updateMutation.isPending}
-                      >
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => handleEdit(user)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => deleteMutation.mutate(user.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin text-destructive" /> : <Trash2 className="w-4 h-4 text-destructive" />}
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+      {/* Diálogo de Confirmação de Exclusão */}
+      <DeleteUserConfirmationDialog
+        isOpen={!!deletingUser}
+        onClose={() => setDeletingUser(null)}
+        onConfirm={handleConfirmDelete}
+        userName={deletingUser?.name || ""}
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
   );
 };
