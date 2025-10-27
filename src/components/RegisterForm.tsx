@@ -11,6 +11,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) => {
+  const [name, setName] = useState(""); // Novo estado para o nome
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +20,7 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!name || !email || !password) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos",
@@ -33,6 +34,11 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: name.trim(), // Passando o nome como metadado
+        }
+      }
     });
     
     if (error) {
@@ -55,6 +61,21 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="name" className="text-sm font-medium text-foreground">
+          Nome
+        </label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="Seu nome completo"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={isLoading}
+          className="bg-background"
+        />
+      </div>
+      
       <div className="space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-foreground">
           Email
