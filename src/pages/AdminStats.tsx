@@ -3,7 +3,8 @@ import { ArrowLeft, BarChart3, Users, Music, ListMusic, Loader2, Heart } from "l
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/StatsCard";
 import { UserGrowthChart } from "@/components/UserGrowthChart";
-import { TopSongsChart } from "@/components/TopSongsChart"; // Importando o novo gráfico
+import { TopSongsChart } from "@/components/TopSongsChart";
+import { HealthCheckCard } from "@/components/HealthCheckCard"; // Importando o novo componente
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +14,7 @@ interface SystemStats {
   totalUsers: number;
   totalSongs: number;
   totalPlaylists: number;
-  totalFavorites: number; // NOVO
+  totalFavorites: number;
   songsToday: number;
 }
 
@@ -112,6 +113,7 @@ const AdminStats = () => {
               icon={Music}
               description="Crescimento nas últimas 24h"
             />
+            <HealthCheckCard /> {/* Novo Card de Saúde */}
           </div>
         )}
         
