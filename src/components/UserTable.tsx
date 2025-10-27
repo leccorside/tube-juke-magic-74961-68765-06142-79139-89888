@@ -18,13 +18,16 @@ import { Tables } from "@/integrations/supabase/types";
 type Profile = Tables<'profiles'>;
 
 const fetchUsers = async (): Promise<Profile[]> => {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Usamos a Edge Function para buscar todos os usuários com privilégios de administrador
+  const { data, error } = await supabase.functions.invoke("admin-fetch-users");
 
   if (error) throw error;
-  return data;
+  
+  if (!data.success) {
+    throw new Error(data.error || "Falha ao buscar usuários via função administrativa.");
+  }
+  
+  return data.profiles as Profile[];
 };
 
 const deleteUser = async (userId: string) => {
@@ -38,6 +41,11 @@ const deleteUser = async (userId: string) => {
 
 const updateUserProfile = async (profile: Partial<Profile>) => {
   const { id, ...updates } = profile;
+  
+  // Nota: A atualização do perfil ainda usa o cliente normal, 
+  // o que requer que a política de RLS permita que o administrador edite outros perfis.
+  // Se a política de RLS for restritiva, esta parte pode falhar.
+  // Assumimos que a política de RLS permite a edição pelo administrador.
   const { error } = await supabase
     .from("profiles")
     .update(updates)
