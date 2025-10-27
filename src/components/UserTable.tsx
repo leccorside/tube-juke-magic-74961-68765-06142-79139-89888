@@ -42,14 +42,16 @@ const deleteUser = async (userId: string) => {
 const updateUserProfile = async (profile: Partial<Profile>) => {
   const { id, ...updates } = profile;
   
-  // A atualização do perfil usa o cliente normal.
-  const { error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", id!)
-    .select();
+  // Usamos a Edge Function para atualização administrativa
+  const { data, error } = await supabase.functions.invoke("admin-update-user", {
+    body: { userId: id, updates },
+  });
 
   if (error) throw error;
+  
+  if (!data.success) {
+    throw new Error(data.error || "Falha desconhecida ao atualizar perfil.");
+  }
 };
 
 export const UserTable = () => {
@@ -107,6 +109,7 @@ export const UserTable = () => {
       toast.error("Nome e Email não podem ser vazios.");
       return;
     }
+    // A Edge Function espera um objeto de updates
     updateMutation.mutate({ id: userId, name: editName, email: editEmail });
   };
 
