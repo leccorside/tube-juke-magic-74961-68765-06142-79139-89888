@@ -38,7 +38,10 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 bg-secondary/50">
+          <Card 
+            className="p-6 bg-secondary/50 hover:bg-secondary/70 transition-colors cursor-pointer"
+            onClick={() => navigate("/admin/users")}
+          >
             <Users className="w-6 h-6 text-primary mb-3" />
             <h3 className="text-xl font-semibold mb-2">Gerenciar Usuários</h3>
             <p className="text-muted-foreground text-sm">

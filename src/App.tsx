@@ -17,6 +17,7 @@ import PlaylistDetail from "./pages/PlaylistDetail";
 import Offline from "./pages/Offline";
 import Install from "./pages/Install";
 import Admin from "./pages/Admin";
+import AdminUsers from "./pages/AdminUsers"; // Importando a nova página
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,14 @@ const AppContent = () => {
         element={
           <AdminRoute>
             <Admin />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <AdminUsers />
           </AdminRoute>
         }
       />
