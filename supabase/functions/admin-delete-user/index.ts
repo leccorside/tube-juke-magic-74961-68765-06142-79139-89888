@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,15 +16,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Cria o cliente Supabase com a Service Role Key para ter privilégios de administrador
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Verificar se o usuário que está chamando é o administrador (leccorside@gmail.com)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -44,7 +38,6 @@ serve(async (req) => {
       );
     }
 
-    // 2. Processar a requisição de exclusão
     const { userId } = await req.json();
 
     if (!userId) {
@@ -54,18 +47,12 @@ serve(async (req) => {
       );
     }
     
-    // 3. Deletar o usuário do Auth
     const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteAuthError) {
       console.error('Error deleting user from auth:', deleteAuthError);
       throw new Error(`Failed to delete user from Auth: ${deleteAuthError.message}`);
     }
-    
-    // Nota: O RLS deve garantir que a exclusão do perfil e dados relacionados
-    // (songs, favorites, playlists) seja feita via triggers ou políticas em cascata.
-    // Se não houver triggers/políticas, o perfil e os dados permanecerão.
-    // Assumimos que as políticas de RLS ou triggers estão configuradas para limpeza.
 
     return new Response(
       JSON.stringify({ success: true }),

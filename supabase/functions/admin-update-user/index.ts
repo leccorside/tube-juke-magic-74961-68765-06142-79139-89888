@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,13 +17,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Verificar se o usuário que está chamando é o administrador
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -43,7 +38,6 @@ serve(async (req) => {
       );
     }
 
-    // 2. Processar a requisição de atualização
     const { userId, updates } = await req.json();
 
     if (!userId || !updates) {
@@ -53,7 +47,6 @@ serve(async (req) => {
       );
     }
     
-    // 3. Atualizar o perfil usando o cliente admin (ignora RLS)
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update(updates)

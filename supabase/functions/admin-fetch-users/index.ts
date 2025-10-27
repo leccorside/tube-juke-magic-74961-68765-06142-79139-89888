@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,15 +16,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Cria o cliente Supabase com a Service Role Key para ter privilégios de administrador
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Verificar se o usuário que está chamando é o administrador (leccorside@gmail.com)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -44,7 +38,6 @@ serve(async (req) => {
       );
     }
 
-    // 2. Buscar todos os perfis usando o cliente admin (Service Role Key ignora RLS)
     const { data: profiles, error: fetchError } = await supabaseAdmin
       .from('profiles')
       .select('*')
