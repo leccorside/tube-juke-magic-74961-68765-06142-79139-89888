@@ -18,14 +18,16 @@ import { Tables } from "@/integrations/supabase/types";
 type Profile = Tables<'profiles'>;
 
 const fetchUsers = async (): Promise<Profile[]> => {
-  // Usando busca direta, confiando na nova política de RLS para o administrador
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Usando a Edge Function para buscar todos os usuários com privilégios de administrador
+  const { data, error } = await supabase.functions.invoke("admin-fetch-users");
 
   if (error) throw error;
-  return data;
+  
+  if (!data.success) {
+    throw new Error(data.error || "Falha desconhecida ao buscar usuários.");
+  }
+  
+  return data.profiles as Profile[];
 };
 
 const deleteUser = async (userId: string) => {
@@ -59,7 +61,7 @@ export const UserTable = () => {
     queryFn: fetchUsers,
   });
   
-  // Adicionando useEffect para exibir erro de busca (substituindo onError)
+  // Adicionando useEffect para exibir erro de busca
   useEffect(() => {
     if (fetchError) {
       console.error("Fetch Users Error:", fetchError);
@@ -120,7 +122,7 @@ export const UserTable = () => {
   if (fetchError) {
     return (
       <div className="text-center py-12 text-red-500">
-        <p>Falha ao carregar dados. Verifique o console para detalhes do erro de RLS.</p>
+        <p>Falha ao carregar dados. Verifique o console para detalhes do erro.</p>
       </div>
     );
   }
@@ -148,7 +150,6 @@ export const UserTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* Usamos users? para garantir que só mapeamos se users não for undefined */}
             {users?.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[50px]">{user.id.substring(0, 4)}...</TableCell>
